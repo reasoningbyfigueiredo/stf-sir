@@ -1,3 +1,22 @@
+STF-SIR — Semantic Tokenization Framework
+
+From tokens to meaning: a new foundation for AI context representation.
+
+📌 Overview
+
+STF-SIR (Semantic Tokenization Framework – Semantic Intermediate Representation) is a novel approach to tokenization that transforms text and structured data into ztokens — semantic units that preserve:
+
+📖 Lexical information
+🧩 Syntactic structure
+🧠 Semantic meaning
+🔗 Logical relationships
+
+Unlike traditional tokenization (BPE, WordPiece), STF-SIR introduces a Semantic Intermediate Representation (SIR) designed for:
+
+Advanced AI reasoning
+Next-generation RAG systems
+Efficient context compression
+Semantic query execution
 ⚠️ The Problem
 
 Current tokenization methods:
