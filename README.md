@@ -2,7 +2,7 @@
 
 From tokens to meaning: a foundation for semantic AI context representation.
 
-> Status: STF-SIR is currently documented as an architectural framework and evolving specification for semantic tokenization and intermediate representation.
+> Status: STF-SIR v1.0.0-mvp is available as a stable, deterministic reference baseline. Future revisions may extend semantics without breaking v1 artifacts.
 
 ## Overview
 
@@ -234,6 +234,19 @@ The `config_hash` captures:
 Any change to these dimensions is a deliberate bump of `config_hash` and
 requires regenerating all goldens under `examples/` and
 `tests/conformance/valid/`.
+
+## Stability
+
+STF-SIR v1.0.0-mvp guarantees:
+
+- deterministic compilation
+- schema validation
+- structural correctness
+
+Future versions will extend semantics without breaking v1 artifacts.
+
+The freeze-level invariants for this baseline are documented in
+[`docs/v1-invariants.md`](docs/v1-invariants.md).
 
 ## License
 

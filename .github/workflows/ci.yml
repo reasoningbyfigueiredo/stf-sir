@@ -46,20 +46,20 @@ jobs:
       - name: cargo test
         run: cargo test --all-features --verbose
 
-      # ── Golden gate: compile the canonical fixture twice and assert
+      # ── Golden gate: compile the frozen fixture twice and assert
       #    byte-for-byte equality with the checked-in .zmd. Any drift
       #    in the compiler, the parser options, or serialisation breaks
       #    this job and blocks the PR.
-      - name: Golden — compile examples/sample.md
+      - name: Golden — compile tests/golden/sample.md
         run: |
-          cargo run --quiet -- compile examples/sample.md -o /tmp/sample.first.zmd
-          cargo run --quiet -- compile examples/sample.md -o /tmp/sample.second.zmd
+          cargo run --quiet -- compile tests/golden/sample.md -o /tmp/sample.first.zmd
+          cargo run --quiet -- compile tests/golden/sample.md -o /tmp/sample.second.zmd
 
       - name: Golden — reproducibility (two runs must agree)
         run: diff -u /tmp/sample.first.zmd /tmp/sample.second.zmd
 
       - name: Golden — checked-in artifact must match
-        run: diff -u examples/sample.zmd /tmp/sample.first.zmd
+        run: diff -u tests/golden/sample.zmd /tmp/sample.first.zmd
 
       - name: Smoke — validate canonical artifact
-        run: cargo run --quiet -- validate examples/sample.zmd
+        run: cargo run --quiet -- validate tests/golden/sample.zmd --source tests/golden/sample.md

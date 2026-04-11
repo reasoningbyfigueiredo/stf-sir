@@ -189,12 +189,14 @@
         "id": { "type": "string" },
         "type": { "type": "string" },
         "category": {
+          "description": "Relation classification. This is orthogonal to `stage`.",
           "type": "string",
           "enum": ["structural", "logical", "semantic-link"]
         },
         "source": { "type": "string" },
         "target": { "type": "string" },
         "stage": {
+          "description": "Pipeline stage that emitted the relation. This is provenance, not semantic type.",
           "type": "string",
           "enum": ["lexical", "syntactic", "semantic", "logical"]
         },

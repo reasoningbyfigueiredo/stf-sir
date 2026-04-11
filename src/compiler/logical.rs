@@ -10,6 +10,11 @@ use crate::model::{Relation, RelationCategory, ZToken};
 ///    position in the `ztokens` vector (which is preorder). Using the parent
 ///    *index* rather than the parent *id* prevents lexicographic pitfalls such
 ///    as `"z10" < "z2"` in documents with more than nine tokens.
+///
+/// Note on `stage`: STF-SIR v1 uses `stage` as relation provenance, not as a
+/// semantic category. The relations emitted here are classified as
+/// `category: structural`, but they still carry `stage: logical` because this
+/// phase is the one that derives and emits them.
 pub fn build_relations(ztokens: &mut [ZToken]) -> Vec<Relation> {
     let mut relations = Vec::new();
     let mut next_relation_id = 1usize;
