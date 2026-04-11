@@ -1,0 +1,65 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  CARGO_TERM_COLOR: always
+  RUSTFLAGS: "-D warnings"
+
+jobs:
+  lint-and-test:
+    name: fmt / clippy / test / golden
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - name: Cache cargo registry and build
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: cargo fmt --check
+        run: cargo fmt --all -- --check
+
+      - name: cargo clippy
+        run: cargo clippy --all-targets --all-features -- -D warnings
+
+      - name: cargo test
+        run: cargo test --all-features --verbose
+
+      # ── Golden gate: compile the canonical fixture twice and assert
+      #    byte-for-byte equality with the checked-in .zmd. Any drift
+      #    in the compiler, the parser options, or serialisation breaks
+      #    this job and blocks the PR.
+      - name: Golden — compile examples/sample.md
+        run: |
+          cargo run --quiet -- compile examples/sample.md -o /tmp/sample.first.zmd
+          cargo run --quiet -- compile examples/sample.md -o /tmp/sample.second.zmd
+
+      - name: Golden — reproducibility (two runs must agree)
+        run: diff -u /tmp/sample.first.zmd /tmp/sample.second.zmd
+
+      - name: Golden — checked-in artifact must match
+        run: diff -u examples/sample.zmd /tmp/sample.first.zmd
+
+      - name: Smoke — validate canonical artifact
+        run: cargo run --quiet -- validate examples/sample.zmd

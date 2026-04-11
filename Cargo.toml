@@ -1,0 +1,24 @@
+[package]
+name = "stf-sir"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.82"
+license = "Apache-2.0"
+description = "Deterministic STF-SIR reference compiler"
+
+[dependencies]
+anyhow = "1.0"
+clap = { version = "4.5", features = ["derive"] }
+jsonschema = { version = "0.17", default-features = false, features = ["draft202012"] }
+pulldown-cmark = "0.12"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+serde_yaml_ng = "0.10"
+sha2 = "0.10"
+thiserror = "1.0"
+unicode-normalization = "0.1"
+
+[dev-dependencies]
+proptest = "1.5"
+tempfile = "3.10"
+

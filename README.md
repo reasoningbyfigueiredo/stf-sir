@@ -178,6 +178,63 @@ This example is illustrative. The purpose is not to prescribe a final serializat
 - Semantic query and execution model
 - Integration patterns for RAG systems and AI agents
 
+## Conformance suite
+
+STF-SIR v1 ships with a machine-readable JSON Schema and a data-driven
+conformance kit so alternative implementations can be validated against
+the same oracle as the reference compiler.
+
+| Artifact | Location |
+| --- | --- |
+| JSON Schema (Draft 2020-12) | [`schemas/zmd-v1.schema.json`](schemas/zmd-v1.schema.json) |
+| Valid fixtures (`.md` ↔ `.zmd` pairs) | [`tests/conformance/valid/`](tests/conformance/valid/) |
+| Schema-level failure cases | [`tests/conformance/invalid_schema/`](tests/conformance/invalid_schema/) |
+| Semantic-level failure cases | [`tests/conformance/invalid_semantic/`](tests/conformance/invalid_semantic/) |
+
+Each invalid case is a folder containing:
+
+- `input.zmd` — an intentionally malformed artifact
+- `expected.txt` — one rule code or path fragment per line that MUST appear
+  in the validator output
+
+**Running the suite locally:**
+
+```bash
+cargo run -- compile examples/sample.md -o examples/sample.zmd
+cargo run -- validate examples/sample.zmd
+cargo test                     # all suites: unit + compile + conformance + proptest
+cargo test --test conformance  # only conformance kit
+```
+
+**For external implementers.** Consume `schemas/zmd-v1.schema.json` for
+structural and enum validation, then port the cross-reference rules
+documented in spec §9 (codes `VAL_05_TOKEN_ID_UNIQUE` through
+`VAL_18_RELATION_STAGE`). The expected-rule substrings in `expected.txt`
+are stable identifiers; an implementation that reports the same codes on
+the same inputs is conformant at the v1 level.
+
+## Reproducibility contract
+
+Artifacts produced by the reference compiler under a fixed
+`compiler.config_hash` are required to be byte-identical across
+compilations of the same source. CI enforces this by compiling
+`examples/sample.md` twice on every push and diffing the output against
+the checked-in `examples/sample.zmd`. Any drift — in parser options,
+serialization order, or relation emission — breaks the build.
+
+The `config_hash` captures:
+
+- parser options (tables, footnotes, strikethrough)
+- the closed set of supported block node types
+- the closed set of emitted relation types and their categories
+- the closed set of pipeline stages
+- the normalization policy (NFKC + whitespace collapse)
+- the serialization backend and field ordering policy
+
+Any change to these dimensions is a deliberate bump of `config_hash` and
+requires regenerating all goldens under `examples/` and
+`tests/conformance/valid/`.
+
 ## License
 
 This project is licensed under the Apache License 2.0. See [LICENSE](LICENSE) for details.

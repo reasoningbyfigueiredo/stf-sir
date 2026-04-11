@@ -1,0 +1,188 @@
+format: stf-sir.zmd
+version: 1
+source:
+  path: tests/conformance/valid/heading_levels.md
+  media_type: text/markdown
+  encoding: utf-8
+  length_bytes: 50
+  sha256: sha256:c02248fb655cbb39d7d97151cbac8d29178aa00829c2911baf7613740e1f3b67
+compiler:
+  name: stf-sir-ref
+  version: 0.1.0
+  config_hash: sha256:930130473f2a81953293b44a228077ce3758f11fe3b286565ae1957713cd810d
+  profile: stf-sir-spec-v1-mvp
+document:
+  language: und
+  token_count: 6
+  relation_count: 5
+  root_token_ids:
+  - z1
+  - z2
+  - z3
+  - z4
+  - z5
+  - z6
+ztokens:
+- id: z1
+  L:
+    source_text: '# H1'
+    plain_text: H1
+    normalized_text: H1
+    span:
+      start_byte: 0
+      end_byte: 4
+      start_line: 1
+      end_line: 1
+  S:
+    node_type: heading
+    parent_id: null
+    depth: 0
+    sibling_index: 0
+    path: '0'
+  Σ:
+    gloss: H1
+  Φ:
+    relation_ids:
+    - r1
+- id: z2
+  L:
+    source_text: '## H2'
+    plain_text: H2
+    normalized_text: H2
+    span:
+      start_byte: 6
+      end_byte: 11
+      start_line: 3
+      end_line: 3
+  S:
+    node_type: heading
+    parent_id: null
+    depth: 0
+    sibling_index: 1
+    path: '1'
+  Σ:
+    gloss: H2
+  Φ:
+    relation_ids:
+    - r1
+    - r2
+- id: z3
+  L:
+    source_text: '### H3'
+    plain_text: H3
+    normalized_text: H3
+    span:
+      start_byte: 13
+      end_byte: 19
+      start_line: 5
+      end_line: 5
+  S:
+    node_type: heading
+    parent_id: null
+    depth: 0
+    sibling_index: 2
+    path: '2'
+  Σ:
+    gloss: H3
+  Φ:
+    relation_ids:
+    - r2
+    - r3
+- id: z4
+  L:
+    source_text: '#### H4'
+    plain_text: H4
+    normalized_text: H4
+    span:
+      start_byte: 21
+      end_byte: 28
+      start_line: 7
+      end_line: 7
+  S:
+    node_type: heading
+    parent_id: null
+    depth: 0
+    sibling_index: 3
+    path: '3'
+  Σ:
+    gloss: H4
+  Φ:
+    relation_ids:
+    - r3
+    - r4
+- id: z5
+  L:
+    source_text: '##### H5'
+    plain_text: H5
+    normalized_text: H5
+    span:
+      start_byte: 30
+      end_byte: 38
+      start_line: 9
+      end_line: 9
+  S:
+    node_type: heading
+    parent_id: null
+    depth: 0
+    sibling_index: 4
+    path: '4'
+  Σ:
+    gloss: H5
+  Φ:
+    relation_ids:
+    - r4
+    - r5
+- id: z6
+  L:
+    source_text: '###### H6'
+    plain_text: H6
+    normalized_text: H6
+    span:
+      start_byte: 40
+      end_byte: 49
+      start_line: 11
+      end_line: 11
+  S:
+    node_type: heading
+    parent_id: null
+    depth: 0
+    sibling_index: 5
+    path: '5'
+  Σ:
+    gloss: H6
+  Φ:
+    relation_ids:
+    - r5
+relations:
+- id: r1
+  type: precedes
+  category: structural
+  source: z1
+  target: z2
+  stage: logical
+- id: r2
+  type: precedes
+  category: structural
+  source: z2
+  target: z3
+  stage: logical
+- id: r3
+  type: precedes
+  category: structural
+  source: z3
+  target: z4
+  stage: logical
+- id: r4
+  type: precedes
+  category: structural
+  source: z4
+  target: z5
+  stage: logical
+- id: r5
+  type: precedes
+  category: structural
+  source: z5
+  target: z6
+  stage: logical
+diagnostics: []
+extensions: {}

@@ -1,0 +1,22 @@
+format: stf-sir.zmd
+version: 1
+source:
+  path: tests/conformance/valid/empty.md
+  media_type: text/markdown
+  encoding: utf-8
+  length_bytes: 0
+  sha256: sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+compiler:
+  name: stf-sir-ref
+  version: 0.1.0
+  config_hash: sha256:930130473f2a81953293b44a228077ce3758f11fe3b286565ae1957713cd810d
+  profile: stf-sir-spec-v1-mvp
+document:
+  language: und
+  token_count: 0
+  relation_count: 0
+  root_token_ids: []
+ztokens: []
+relations: []
+diagnostics: []
+extensions: {}

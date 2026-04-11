@@ -1,0 +1,107 @@
+format: stf-sir.zmd
+version: 1
+source:
+  path: tests/conformance/valid/multiline_paragraph.md
+  media_type: text/markdown
+  encoding: utf-8
+  length_bytes: 99
+  sha256: sha256:fd707a7a15886e61879128712f84c334c46b5b1cb3cc1c0a95501044375a5fc1
+compiler:
+  name: stf-sir-ref
+  version: 0.1.0
+  config_hash: sha256:930130473f2a81953293b44a228077ce3758f11fe3b286565ae1957713cd810d
+  profile: stf-sir-spec-v1-mvp
+document:
+  language: und
+  token_count: 3
+  relation_count: 2
+  root_token_ids:
+  - z1
+  - z2
+  - z3
+ztokens:
+- id: z1
+  L:
+    source_text: '# Soft breaks'
+    plain_text: Soft breaks
+    normalized_text: Soft breaks
+    span:
+      start_byte: 0
+      end_byte: 13
+      start_line: 1
+      end_line: 1
+  S:
+    node_type: heading
+    parent_id: null
+    depth: 0
+    sibling_index: 0
+    path: '0'
+  Σ:
+    gloss: Soft breaks
+  Φ:
+    relation_ids:
+    - r1
+- id: z2
+  L:
+    source_text: |-
+      This paragraph spans
+      multiple source lines
+      with soft breaks only.
+    plain_text: |-
+      This paragraph spans
+      multiple source lines
+      with soft breaks only.
+    normalized_text: This paragraph spans multiple source lines with soft breaks only.
+    span:
+      start_byte: 15
+      end_byte: 80
+      start_line: 3
+      end_line: 5
+  S:
+    node_type: paragraph
+    parent_id: null
+    depth: 0
+    sibling_index: 1
+    path: '1'
+  Σ:
+    gloss: This paragraph spans multiple source lines with soft breaks only.
+  Φ:
+    relation_ids:
+    - r1
+    - r2
+- id: z3
+  L:
+    source_text: Final paragraph.
+    plain_text: Final paragraph.
+    normalized_text: Final paragraph.
+    span:
+      start_byte: 82
+      end_byte: 98
+      start_line: 7
+      end_line: 7
+  S:
+    node_type: paragraph
+    parent_id: null
+    depth: 0
+    sibling_index: 2
+    path: '2'
+  Σ:
+    gloss: Final paragraph.
+  Φ:
+    relation_ids:
+    - r2
+relations:
+- id: r1
+  type: precedes
+  category: structural
+  source: z1
+  target: z2
+  stage: logical
+- id: r2
+  type: precedes
+  category: structural
+  source: z2
+  target: z3
+  stage: logical
+diagnostics: []
+extensions: {}

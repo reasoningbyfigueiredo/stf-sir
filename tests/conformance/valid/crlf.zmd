@@ -1,0 +1,167 @@
+format: stf-sir.zmd
+version: 1
+source:
+  path: tests/conformance/valid/crlf.md
+  media_type: text/markdown
+  encoding: utf-8
+  length_bytes: 57
+  sha256: sha256:ece4de46dbe4fc9b344b2e4f9328ad5228377d8e07eb64bf501046d7118cd5f7
+compiler:
+  name: stf-sir-ref
+  version: 0.1.0
+  config_hash: sha256:930130473f2a81953293b44a228077ce3758f11fe3b286565ae1957713cd810d
+  profile: stf-sir-spec-v1-mvp
+document:
+  language: und
+  token_count: 5
+  relation_count: 5
+  root_token_ids:
+  - z1
+  - z2
+  - z3
+ztokens:
+- id: z1
+  L:
+    source_text: '# Title'
+    plain_text: Title
+    normalized_text: Title
+    span:
+      start_byte: 0
+      end_byte: 7
+      start_line: 1
+      end_line: 1
+  S:
+    node_type: heading
+    parent_id: null
+    depth: 0
+    sibling_index: 0
+    path: '0'
+  Σ:
+    gloss: Title
+  Φ:
+    relation_ids:
+    - r3
+- id: z2
+  L:
+    source_text: Body with CRLF line endings.
+    plain_text: Body with CRLF line endings.
+    normalized_text: Body with CRLF line endings.
+    span:
+      start_byte: 11
+      end_byte: 39
+      start_line: 3
+      end_line: 3
+  S:
+    node_type: paragraph
+    parent_id: null
+    depth: 0
+    sibling_index: 1
+    path: '1'
+  Σ:
+    gloss: Body with CRLF line endings.
+  Φ:
+    relation_ids:
+    - r3
+    - r4
+- id: z3
+  L:
+    source_text: "- one\r\n- two"
+    plain_text: |-
+      one
+      two
+    normalized_text: one two
+    span:
+      start_byte: 43
+      end_byte: 55
+      start_line: 5
+      end_line: 6
+  S:
+    node_type: list
+    parent_id: null
+    depth: 0
+    sibling_index: 2
+    path: '2'
+  Σ:
+    gloss: one two
+  Φ:
+    relation_ids:
+    - r1
+    - r2
+    - r4
+- id: z4
+  L:
+    source_text: '- one'
+    plain_text: one
+    normalized_text: one
+    span:
+      start_byte: 43
+      end_byte: 48
+      start_line: 5
+      end_line: 5
+  S:
+    node_type: list_item
+    parent_id: z3
+    depth: 1
+    sibling_index: 0
+    path: 2/0
+  Σ:
+    gloss: one
+  Φ:
+    relation_ids:
+    - r1
+    - r5
+- id: z5
+  L:
+    source_text: '- two'
+    plain_text: two
+    normalized_text: two
+    span:
+      start_byte: 50
+      end_byte: 55
+      start_line: 6
+      end_line: 6
+  S:
+    node_type: list_item
+    parent_id: z3
+    depth: 1
+    sibling_index: 1
+    path: 2/1
+  Σ:
+    gloss: two
+  Φ:
+    relation_ids:
+    - r2
+    - r5
+relations:
+- id: r1
+  type: contains
+  category: structural
+  source: z3
+  target: z4
+  stage: logical
+- id: r2
+  type: contains
+  category: structural
+  source: z3
+  target: z5
+  stage: logical
+- id: r3
+  type: precedes
+  category: structural
+  source: z1
+  target: z2
+  stage: logical
+- id: r4
+  type: precedes
+  category: structural
+  source: z2
+  target: z3
+  stage: logical
+- id: r5
+  type: precedes
+  category: structural
+  source: z4
+  target: z5
+  stage: logical
+diagnostics: []
+extensions: {}

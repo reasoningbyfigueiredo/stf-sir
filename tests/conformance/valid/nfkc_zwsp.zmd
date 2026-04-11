@@ -1,0 +1,72 @@
+format: stf-sir.zmd
+version: 1
+source:
+  path: tests/conformance/valid/nfkc_zwsp.md
+  media_type: text/markdown
+  encoding: utf-8
+  length_bytes: 52
+  sha256: sha256:b20229858262e7400b12c1c83d5d8303b65630a6b7631c9d2210ce218e0f4c23
+compiler:
+  name: stf-sir-ref
+  version: 0.1.0
+  config_hash: sha256:930130473f2a81953293b44a228077ce3758f11fe3b286565ae1957713cd810d
+  profile: stf-sir-spec-v1-mvp
+document:
+  language: und
+  token_count: 2
+  relation_count: 1
+  root_token_ids:
+  - z1
+  - z2
+ztokens:
+- id: z1
+  L:
+    source_text: '# Zero width'
+    plain_text: Zero width
+    normalized_text: Zero width
+    span:
+      start_byte: 0
+      end_byte: 12
+      start_line: 1
+      end_line: 1
+  S:
+    node_type: heading
+    parent_id: null
+    depth: 0
+    sibling_index: 0
+    path: '0'
+  Σ:
+    gloss: Zero width
+  Φ:
+    relation_ids:
+    - r1
+- id: z2
+  L:
+    source_text: he​llo contains a zero-width space.
+    plain_text: he​llo contains a zero-width space.
+    normalized_text: he​llo contains a zero-width space.
+    span:
+      start_byte: 14
+      end_byte: 51
+      start_line: 3
+      end_line: 3
+  S:
+    node_type: paragraph
+    parent_id: null
+    depth: 0
+    sibling_index: 1
+    path: '1'
+  Σ:
+    gloss: he​llo contains a zero-width space.
+  Φ:
+    relation_ids:
+    - r1
+relations:
+- id: r1
+  type: precedes
+  category: structural
+  source: z1
+  target: z2
+  stage: logical
+diagnostics: []
+extensions: {}

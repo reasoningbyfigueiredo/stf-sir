@@ -1,0 +1,72 @@
+format: stf-sir.zmd
+version: 1
+source:
+  path: tests/conformance/valid/nfkc_fb03.md
+  media_type: text/markdown
+  encoding: utf-8
+  length_bytes: 94
+  sha256: sha256:2645097985204e2d629fcf2e365fafc1968bb62c5d621fb0d07b70a285c66109
+compiler:
+  name: stf-sir-ref
+  version: 0.1.0
+  config_hash: sha256:930130473f2a81953293b44a228077ce3758f11fe3b286565ae1957713cd810d
+  profile: stf-sir-spec-v1-mvp
+document:
+  language: und
+  token_count: 2
+  relation_count: 1
+  root_token_ids:
+  - z1
+  - z2
+ztokens:
+- id: z1
+  L:
+    source_text: '# Ligature test'
+    plain_text: Ligature test
+    normalized_text: Ligature test
+    span:
+      start_byte: 0
+      end_byte: 15
+      start_line: 1
+      end_line: 1
+  S:
+    node_type: heading
+    parent_id: null
+    depth: 0
+    sibling_index: 0
+    path: '0'
+  Σ:
+    gloss: Ligature test
+  Φ:
+    relation_ids:
+    - r1
+- id: z2
+  L:
+    source_text: The word ofﬃce contains a ﬃ ligature that NFKC unfolds to three letters.
+    plain_text: The word ofﬃce contains a ﬃ ligature that NFKC unfolds to three letters.
+    normalized_text: The word offfice contains a ffi ligature that NFKC unfolds to three letters.
+    span:
+      start_byte: 17
+      end_byte: 93
+      start_line: 3
+      end_line: 3
+  S:
+    node_type: paragraph
+    parent_id: null
+    depth: 0
+    sibling_index: 1
+    path: '1'
+  Σ:
+    gloss: The word offfice contains a ffi ligature that NFKC unfolds to three letters.
+  Φ:
+    relation_ids:
+    - r1
+relations:
+- id: r1
+  type: precedes
+  category: structural
+  source: z1
+  target: z2
+  stage: logical
+diagnostics: []
+extensions: {}
