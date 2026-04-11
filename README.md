@@ -1,2 +1,110 @@
-# stf-sir
-STF-SIR is a Semantic Intermediate Representation that transforms text and data into structured, lossless, and semantically executable tokens (ztokens), enabling next-generation AI, RAG, and reasoning systems.
+⚠️ The Problem
+
+Current tokenization methods:
+
+Lose structural and semantic information
+Fragment meaning into statistical chunks
+Increase token cost for LLMs
+Limit reasoning capabilities
+💡 The STF Approach
+
+STF-SIR defines a compilation process:
+
+𝐷
+→
+𝑧
+D→z
+
+Where:
+
+𝐷
+D = original document
+𝑧
+z = semantic representation (ztokens)
+
+Each ztoken is defined as:
+
+𝑧
+=
+⟨
+𝐿
+,
+𝑆
+,
+Σ
+,
+Φ
+⟩
+z=⟨L,S,Σ,Φ⟩
+Component	Description
+L	Lexical layer
+S	Syntax (AST)
+Σ	Semantic meaning
+Φ	Logical relations
+🧬 Architecture
+Input (.md / .json)
+        ↓
+Lexical Analysis
+        ↓
+Syntax Tree (AST)
+        ↓
+Semantic Extraction
+        ↓
+Logical Modeling
+        ↓
+STF Compiler
+        ↓
+Output (.zmd / ztokens)
+📦 File Format: .zmd
+header:
+  version: STF-SIR/1.0
+  encoding: semantic-binary
+
+body:
+  ztokens:
+    - id: z1
+      type: paragraph
+      semantic_hash: 0xA91F...
+      structure_ref: ast_12
+      logic_ref: graph_3
+⚙️ Example
+Input
+# AI is transforming software development
+Output (conceptual)
+ztoken:
+  type: statement
+  semantic: "AI impacts software engineering"
+  logic: cause-effect
+🚀 Key Innovations
+🧠 Semantic Tokenization (ztokens)
+📦 Lossless Information Retention
+⚡ Direct execution on compressed representation
+🔍 Query without decompression
+🔗 Semantic + Logical IR
+🔄 Comparison
+Feature	Traditional Tokens	STF-SIR
+Unit	Subword	Semantic unit
+Context	Local	Global
+Compression	Statistical	Semantic
+Reasoning	Limited	Native
+Reversibility	Partial	High
+🧪 Use Cases
+🔎 Semantic RAG (no chunking)
+🤖 AI agents operating on meaning
+🧠 Knowledge graphs
+📚 Semantic versioning & diff
+⚙️ Natural language compilation
+🧱 Roadmap
+ STF Formal Specification
+ .zmd format definition
+ CLI Compiler (stf compile)
+ Semantic Query Engine
+ Agent integration
+⚖️ License
+
+Licensed under the Apache License 2.0
+
+👤 Author
+
+Rogério Figueiredo
+DevSecOps | Systems Architecture | AI Systems
