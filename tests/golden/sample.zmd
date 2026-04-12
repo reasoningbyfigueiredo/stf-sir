@@ -8,7 +8,7 @@ source:
   sha256: sha256:c5edb7772eab726bd71ad2c8ce2bc4abbabb1f70a65b871ab6ef0eca9a672e34
 compiler:
   name: stf-sir-ref
-  version: 0.1.0
+  version: 1.0.0
   config_hash: sha256:930130473f2a81953293b44a228077ce3758f11fe3b286565ae1957713cd810d
   profile: stf-sir-spec-v1-mvp
 document:

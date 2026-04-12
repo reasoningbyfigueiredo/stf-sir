@@ -349,7 +349,7 @@ source:
   sha256: "sha256:REPLACE_WITH_SOURCE_HASH"
 compiler:
   name: stf-sir-ref
-  version: 0.1.0
+  version: 1.0.0
   config_hash: "sha256:REPLACE_WITH_CONFIG_HASH"
 document:
   language: en
