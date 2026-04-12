@@ -14,7 +14,7 @@ pub fn apply(ztokens: &mut [ZToken]) {
     }
 }
 
-fn normalize_text(input: &str) -> String {
+pub(crate) fn normalize_text(input: &str) -> String {
     let normalized = input.nfkc().collect::<String>();
     normalized.split_whitespace().collect::<Vec<_>>().join(" ")
 }

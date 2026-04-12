@@ -1,1 +1,39 @@
-/target
+# =========================
+# Rust
+# =========================
+target/
+
+# Opcional (se quiser reproducibilidade total, mantenha)
+# Cargo.lock
+
+# =========================
+# LaTeX artifacts (global)
+# =========================
+*.aux
+*.log
+*.out
+*.fls
+*.fdb_latexmk
+*.toc
+*.synctex.gz
+
+# Arquivos gerados automaticamente pelo TeX
+texput.log
+texput.fls
+
+# =========================
+# PDFs (controlado)
+# =========================
+*.pdf
+
+# Mantém apenas o paper principal
+!sts-paper.pdf
+!docs/sts-paper.pdf
+
+# =========================
+# Editor / OS
+# =========================
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

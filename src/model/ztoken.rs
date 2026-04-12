@@ -15,6 +15,24 @@ pub struct ZToken {
     pub extensions: std::collections::BTreeMap<String, serde_yaml_ng::Value>,
 }
 
+impl ZToken {
+    pub fn pi_l(&self) -> &LexicalDimension {
+        &self.lexical
+    }
+
+    pub fn pi_s(&self) -> &SyntacticDimension {
+        &self.syntactic
+    }
+
+    pub fn pi_sigma(&self) -> &SemanticDimension {
+        &self.semantic
+    }
+
+    pub fn pi_phi(&self) -> &LogicalDimension {
+        &self.logical
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LexicalDimension {
     pub source_text: String,

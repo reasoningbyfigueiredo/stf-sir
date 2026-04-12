@@ -1,13 +1,12 @@
-use std::fs;
-use std::path::Path;
+mod common;
 
 use anyhow::{Context, Result};
-use stf_sir::compiler;
 use stf_sir::model::ZToken;
 
 #[test]
-fn nfkc_fullwidth_fixture_normalizes_compatibility_forms() -> Result<()> {
-    let artifact = compile_fixture("tests/conformance/valid/cjk_fullwidth.md")?;
+fn unicode_nfkc_fixture_normalizes_compatibility_forms_and_preserves_multibyte_spans() -> Result<()>
+{
+    let artifact = common::compile_fixture("tests/fixtures/valid/unicode_nfkc.md")?;
     let paragraph = token(&artifact.ztokens, "z2")?;
 
     assert_eq!(
@@ -22,13 +21,18 @@ fn nfkc_fullwidth_fixture_normalizes_compatibility_forms() -> Result<()> {
     assert_eq!(paragraph.lexical.span.end_byte, 84);
     assert_eq!(paragraph.lexical.span.start_line, 3);
     assert_eq!(paragraph.lexical.span.end_line, 3);
+    assert!(
+        paragraph.lexical.span.end_byte - paragraph.lexical.span.start_byte
+            > paragraph.lexical.plain_text.chars().count(),
+        "expected UTF-8 multibyte span accounting for paragraph z2"
+    );
 
     Ok(())
 }
 
 #[test]
 fn ligature_fixture_unfolds_fb03_and_preserves_spans() -> Result<()> {
-    let artifact = compile_fixture("tests/conformance/valid/nfkc_fb03.md")?;
+    let artifact = common::compile_fixture("tests/conformance/valid/nfkc_fb03.md")?;
     let paragraph = token(&artifact.ztokens, "z2")?;
 
     assert_eq!(
@@ -49,7 +53,7 @@ fn ligature_fixture_unfolds_fb03_and_preserves_spans() -> Result<()> {
 
 #[test]
 fn zero_width_fixture_preserves_character_and_correct_span_coordinates() -> Result<()> {
-    let artifact = compile_fixture("tests/conformance/valid/nfkc_zwsp.md")?;
+    let artifact = common::compile_fixture("tests/fixtures/valid/zero_width.md")?;
     let paragraph = token(&artifact.ztokens, "z2")?;
 
     assert_eq!(
@@ -74,7 +78,7 @@ fn zero_width_fixture_preserves_character_and_correct_span_coordinates() -> Resu
 
 #[test]
 fn multiline_paragraph_fixture_tracks_soft_break_lines_and_collapsed_normalization() -> Result<()> {
-    let artifact = compile_fixture("tests/conformance/valid/multiline_paragraph.md")?;
+    let artifact = common::compile_fixture("tests/fixtures/valid/multiline.md")?;
     let paragraph = token(&artifact.ztokens, "z2")?;
 
     assert_eq!(
@@ -99,7 +103,7 @@ fn multiline_paragraph_fixture_tracks_soft_break_lines_and_collapsed_normalizati
 
 #[test]
 fn crlf_fixture_preserves_byte_offsets_and_one_based_line_numbers() -> Result<()> {
-    let artifact = compile_fixture("tests/conformance/valid/crlf.md")?;
+    let artifact = common::compile_fixture("tests/fixtures/valid/crlf.md")?;
     let heading = token(&artifact.ztokens, "z1")?;
     let paragraph = token(&artifact.ztokens, "z2")?;
     let list = token(&artifact.ztokens, "z3")?;
@@ -138,7 +142,7 @@ fn crlf_fixture_preserves_byte_offsets_and_one_based_line_numbers() -> Result<()
 
 #[test]
 fn empty_document_fixture_emits_no_tokens_and_zero_length_source() -> Result<()> {
-    let artifact = compile_fixture("tests/conformance/valid/empty.md")?;
+    let artifact = common::compile_fixture("tests/fixtures/valid/empty.md")?;
 
     assert_eq!(artifact.source.length_bytes, 0);
     assert!(artifact.ztokens.is_empty());
@@ -151,7 +155,7 @@ fn empty_document_fixture_emits_no_tokens_and_zero_length_source() -> Result<()>
 
 #[test]
 fn whitespace_only_fixture_emits_no_tokens_but_preserves_source_length() -> Result<()> {
-    let artifact = compile_fixture("tests/conformance/valid/whitespace_only.md")?;
+    let artifact = common::compile_fixture("tests/fixtures/valid/whitespace.md")?;
 
     assert_eq!(artifact.source.length_bytes, 11);
     assert!(artifact.ztokens.is_empty());
@@ -160,14 +164,6 @@ fn whitespace_only_fixture_emits_no_tokens_but_preserves_source_length() -> Resu
     assert_eq!(artifact.document.relation_count, 0);
 
     Ok(())
-}
-
-fn compile_fixture(relative_path: &str) -> Result<stf_sir::model::Artifact> {
-    let repo_root = Path::new(env!("CARGO_MANIFEST_DIR"));
-    let path = repo_root.join(relative_path);
-    let source = fs::read_to_string(&path)
-        .with_context(|| format!("failed to read fixture {}", path.display()))?;
-    compiler::compile_markdown(&source, Some(Path::new(relative_path))).map_err(Into::into)
 }
 
 fn token<'a>(ztokens: &'a [ZToken], id: &str) -> Result<&'a ZToken> {

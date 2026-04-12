@@ -3,6 +3,8 @@ use std::collections::BTreeMap;
 use serde::{Deserialize, Serialize};
 
 use crate::model::{Relation, ZToken};
+use crate::retention::RetentionBaseline;
+use crate::sir::SirGraph;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Artifact {
@@ -16,6 +18,16 @@ pub struct Artifact {
     pub diagnostics: Vec<Diagnostic>,
     #[serde(default)]
     pub extensions: BTreeMap<String, serde_yaml_ng::Value>,
+}
+
+impl Artifact {
+    pub fn as_sir_graph(&self) -> SirGraph {
+        SirGraph::from_artifact(self)
+    }
+
+    pub fn retention_baseline(&self) -> RetentionBaseline {
+        RetentionBaseline::from_artifact(self)
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

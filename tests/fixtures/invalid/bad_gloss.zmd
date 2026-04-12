@@ -1,0 +1,72 @@
+format: stf-sir.zmd
+version: 1
+source:
+  path: examples/sample.md
+  media_type: text/markdown
+  encoding: utf-8
+  length_bytes: 102
+  sha256: sha256:b3b92af9cc0f922d5c1d0067f05de4cf80a0b313930cdbf4c3d71d02fd6fa2a1
+compiler:
+  name: stf-sir-ref
+  version: 0.1.0
+  config_hash: sha256:930130473f2a81953293b44a228077ce3758f11fe3b286565ae1957713cd810d
+  profile: stf-sir-spec-v1-mvp
+document:
+  language: und
+  token_count: 2
+  relation_count: 1
+  root_token_ids:
+  - z1
+  - z2
+ztokens:
+- id: z1
+  L:
+    source_text: '# AI is transforming software development'
+    plain_text: AI is transforming software development
+    normalized_text: AI is transforming software development
+    span:
+      start_byte: 0
+      end_byte: 41
+      start_line: 1
+      end_line: 1
+  S:
+    node_type: heading
+    parent_id: null
+    depth: 0
+    sibling_index: 0
+    path: '0'
+  Σ:
+    gloss: mismatched gloss
+  Φ:
+    relation_ids:
+    - r1
+- id: z2
+  L:
+    source_text: Semantic tokenization preserves meaning across structure.
+    plain_text: Semantic tokenization preserves meaning across structure.
+    normalized_text: Semantic tokenization preserves meaning across structure.
+    span:
+      start_byte: 43
+      end_byte: 100
+      start_line: 3
+      end_line: 3
+  S:
+    node_type: paragraph
+    parent_id: null
+    depth: 0
+    sibling_index: 1
+    path: '1'
+  Σ:
+    gloss: Semantic tokenization preserves meaning across structure.
+  Φ:
+    relation_ids:
+    - r1
+relations:
+- id: r1
+  type: precedes
+  category: structural
+  source: z1
+  target: z2
+  stage: logical
+diagnostics: []
+extensions: {}

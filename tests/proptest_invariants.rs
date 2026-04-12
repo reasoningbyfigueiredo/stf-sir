@@ -6,15 +6,21 @@
 //! span-and-UTF-8 bugs are most likely to break:
 //!
 //! * **rule 5** — every ztoken id is unique,
+//! * **rule 6** — every relation id is unique,
 //! * **rule 7/8** — `document.token_count` and `relation_count` match the
 //!   length of the serialized vectors,
+//! * **rule 9--13** — parent ids, relation endpoints, and `Φ.relation_ids`
+//!   resolve to existing objects,
 //! * **rule 14** — every byte span satisfies
 //!   `0 ≤ start_byte < end_byte ≤ source.length_bytes`,
 //! * **rule 16** — `L.source_text` is byte-equal to the source slice it
-//!   identifies.
+//!   identifies,
+//! * **graph/retention invariants** — SirGraph indexes are consistent and
+//!   retention scores stay within `[0, 1]`.
 //!
 //! The generator is intentionally modest: it is meant to exercise the hot
-//! paths (heading/paragraph/list combinations with varying whitespace) and
+//! paths (heading/paragraph/list/blockquote/code-block combinations with
+//! varying whitespace) and
 //! hand the deeper edge cases to the curated fixtures in
 //! `tests/conformance/valid/`. Fuzzing proper is out of scope for v1.
 
@@ -23,6 +29,7 @@ use std::collections::HashSet;
 use proptest::prelude::*;
 use stf_sir::compiler;
 use stf_sir::compiler::validator;
+use stf_sir::model::RelationCategory;
 
 /// Produce a single ASCII word of 1..6 lowercase characters.
 fn word() -> impl Strategy<Value = String> {
@@ -39,8 +46,12 @@ fn block() -> impl Strategy<Value = String> {
         1..4,
     )
     .prop_map(|items| items.join("\n"));
+    let blockquote =
+        prop::collection::vec(word(), 1..6).prop_map(|words| format!("> {}", words.join(" ")));
+    let code_block = prop::collection::vec(word(), 1..5)
+        .prop_map(|words| format!("```\n{}\n```", words.join(" ")));
 
-    prop_oneof![heading, paragraph, bullet_list]
+    prop_oneof![heading, paragraph, bullet_list, blockquote, code_block]
 }
 
 /// Assemble 1..5 blocks separated by blank lines and terminated by `\n`.
@@ -74,9 +85,46 @@ proptest! {
             );
         }
 
+        // Rule 6 — unique relation ids.
+        let mut relation_ids: HashSet<&str> = HashSet::new();
+        for relation in &artifact.relations {
+            prop_assert!(
+                relation_ids.insert(relation.id.as_str()),
+                "duplicate relation id {:?}",
+                relation.id
+            );
+        }
+
         // Rules 7 and 8 — counts in sync with the serialized vectors.
         prop_assert_eq!(artifact.document.token_count, artifact.ztokens.len());
         prop_assert_eq!(artifact.document.relation_count, artifact.relations.len());
+
+        let token_ids = artifact
+            .ztokens
+            .iter()
+            .map(|token| token.id.as_str())
+            .collect::<HashSet<_>>();
+
+        // Rule 9 — parent references resolve.
+        for token in &artifact.ztokens {
+            if let Some(parent_id) = token.syntactic.parent_id.as_deref() {
+                prop_assert!(token_ids.contains(parent_id));
+            }
+        }
+
+        // Rules 10--13 — relation endpoints and Φ.relation_ids resolve.
+        for relation in &artifact.relations {
+            prop_assert!(token_ids.contains(relation.source.as_str()));
+            prop_assert!(
+                token_ids.contains(relation.target.as_str())
+                    || matches!(relation.category, RelationCategory::SemanticLink)
+            );
+        }
+        for token in &artifact.ztokens {
+            for relation_id in &token.logical.relation_ids {
+                prop_assert!(relation_ids.contains(relation_id.as_str()));
+            }
+        }
 
         // Rule 14 — byte span bounds.
         for token in &artifact.ztokens {
@@ -108,5 +156,35 @@ proptest! {
             "validator rejected a generated artifact: {:?}",
             errors
         );
+
+        // SirGraph projection invariants.
+        let graph = artifact.as_sir_graph();
+        prop_assert_eq!(graph.nodes.len(), artifact.document.token_count);
+        prop_assert_eq!(graph.edges.len(), artifact.document.relation_count);
+        prop_assert_eq!(graph.node_by_id.len(), graph.nodes.len());
+        for (id, index) in &graph.node_by_id {
+            prop_assert_eq!(graph.nodes[*index].id.as_str(), id.as_str());
+        }
+        for (node_id, edge_indexes) in &graph.outgoing {
+            for edge_index in edge_indexes {
+                prop_assert_eq!(graph.edges[*edge_index].source.as_str(), node_id.as_str());
+            }
+        }
+        for (node_id, edge_indexes) in &graph.incoming {
+            for edge_index in edge_indexes {
+                prop_assert_eq!(graph.edges[*edge_index].target.as_str(), node_id.as_str());
+            }
+        }
+
+        // Retention values must remain within [0, 1].
+        let baseline = artifact.retention_baseline();
+        for value in [
+            baseline.vector.rho_l,
+            baseline.vector.rho_s,
+            baseline.vector.rho_sigma,
+            baseline.vector.rho_phi,
+        ] {
+            prop_assert!((0.0..=1.0).contains(&value));
+        }
     }
 }

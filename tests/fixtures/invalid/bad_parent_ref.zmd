@@ -1,0 +1,261 @@
+format: stf-sir.zmd
+version: 1
+source:
+  path: tests/conformance/valid/nested_list_depth3.md
+  media_type: text/markdown
+  encoding: utf-8
+  length_bytes: 54
+  sha256: sha256:53c596b6ddfa1c2812496ab67c454fef2722a6aa08c409aad284cb80bd98b05d
+compiler:
+  name: stf-sir-ref
+  version: 0.1.0
+  config_hash: sha256:930130473f2a81953293b44a228077ce3758f11fe3b286565ae1957713cd810d
+  profile: stf-sir-spec-v1-mvp
+document:
+  language: und
+  token_count: 8
+  relation_count: 8
+  root_token_ids:
+  - z1
+  - z2
+ztokens:
+- id: z1
+  L:
+    source_text: '# Nested'
+    plain_text: Nested
+    normalized_text: Nested
+    span:
+      start_byte: 0
+      end_byte: 8
+      start_line: 1
+      end_line: 1
+  S:
+    node_type: heading
+    parent_id: null
+    depth: 0
+    sibling_index: 0
+    path: '0'
+  Σ:
+    gloss: Nested
+  Φ:
+    relation_ids:
+    - r7
+- id: z2
+  L:
+    source_text: |-
+      - root
+        - child
+          - grandchild
+      - sibling
+    plain_text: |-
+      rootchildgrandchild
+      sibling
+    normalized_text: rootchildgrandchild sibling
+    span:
+      start_byte: 10
+      end_byte: 53
+      start_line: 3
+      end_line: 6
+  S:
+    node_type: list
+    parent_id: null
+    depth: 0
+    sibling_index: 1
+    path: '1'
+  Σ:
+    gloss: rootchildgrandchild sibling
+  Φ:
+    relation_ids:
+    - r1
+    - r6
+    - r7
+- id: z3
+  L:
+    source_text: |-
+      - root
+        - child
+          - grandchild
+    plain_text: rootchildgrandchild
+    normalized_text: rootchildgrandchild
+    span:
+      start_byte: 10
+      end_byte: 43
+      start_line: 3
+      end_line: 5
+  S:
+    node_type: list_item
+    parent_id: zGHOST
+    depth: 1
+    sibling_index: 0
+    path: 1/0
+  Σ:
+    gloss: rootchildgrandchild
+  Φ:
+    relation_ids:
+    - r1
+    - r2
+    - r8
+- id: z4
+  L:
+    source_text: |-
+      - child
+          - grandchild
+    plain_text: childgrandchild
+    normalized_text: childgrandchild
+    span:
+      start_byte: 19
+      end_byte: 43
+      start_line: 4
+      end_line: 5
+  S:
+    node_type: list
+    parent_id: z3
+    depth: 2
+    sibling_index: 0
+    path: 1/0/0
+  Σ:
+    gloss: childgrandchild
+  Φ:
+    relation_ids:
+    - r2
+    - r3
+- id: z5
+  L:
+    source_text: |-
+      - child
+          - grandchild
+    plain_text: childgrandchild
+    normalized_text: childgrandchild
+    span:
+      start_byte: 19
+      end_byte: 43
+      start_line: 4
+      end_line: 5
+  S:
+    node_type: list_item
+    parent_id: z4
+    depth: 3
+    sibling_index: 0
+    path: 1/0/0/0
+  Σ:
+    gloss: childgrandchild
+  Φ:
+    relation_ids:
+    - r3
+    - r4
+- id: z6
+  L:
+    source_text: '- grandchild'
+    plain_text: grandchild
+    normalized_text: grandchild
+    span:
+      start_byte: 31
+      end_byte: 43
+      start_line: 5
+      end_line: 5
+  S:
+    node_type: list
+    parent_id: z5
+    depth: 4
+    sibling_index: 0
+    path: 1/0/0/0/0
+  Σ:
+    gloss: grandchild
+  Φ:
+    relation_ids:
+    - r4
+    - r5
+- id: z7
+  L:
+    source_text: '- grandchild'
+    plain_text: grandchild
+    normalized_text: grandchild
+    span:
+      start_byte: 31
+      end_byte: 43
+      start_line: 5
+      end_line: 5
+  S:
+    node_type: list_item
+    parent_id: z6
+    depth: 5
+    sibling_index: 0
+    path: 1/0/0/0/0/0
+  Σ:
+    gloss: grandchild
+  Φ:
+    relation_ids:
+    - r5
+- id: z8
+  L:
+    source_text: '- sibling'
+    plain_text: sibling
+    normalized_text: sibling
+    span:
+      start_byte: 44
+      end_byte: 53
+      start_line: 6
+      end_line: 6
+  S:
+    node_type: list_item
+    parent_id: z2
+    depth: 1
+    sibling_index: 1
+    path: 1/1
+  Σ:
+    gloss: sibling
+  Φ:
+    relation_ids:
+    - r6
+    - r8
+relations:
+- id: r1
+  type: contains
+  category: structural
+  source: z2
+  target: z3
+  stage: logical
+- id: r2
+  type: contains
+  category: structural
+  source: z3
+  target: z4
+  stage: logical
+- id: r3
+  type: contains
+  category: structural
+  source: z4
+  target: z5
+  stage: logical
+- id: r4
+  type: contains
+  category: structural
+  source: z5
+  target: z6
+  stage: logical
+- id: r5
+  type: contains
+  category: structural
+  source: z6
+  target: z7
+  stage: logical
+- id: r6
+  type: contains
+  category: structural
+  source: z2
+  target: z8
+  stage: logical
+- id: r7
+  type: precedes
+  category: structural
+  source: z1
+  target: z2
+  stage: logical
+- id: r8
+  type: precedes
+  category: structural
+  source: z3
+  target: z8
+  stage: logical
+diagnostics: []
+extensions: {}

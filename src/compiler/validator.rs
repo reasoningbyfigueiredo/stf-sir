@@ -19,6 +19,7 @@
 use std::collections::HashSet;
 
 use crate::compiler::schema;
+use crate::compiler::semantic::normalize_text;
 use crate::model::{Artifact, RelationCategory};
 
 /// A single validation failure, carrying a short machine code and a
@@ -299,10 +300,23 @@ pub fn validate(artifact: &Artifact, source_bytes: Option<&[u8]>) -> Vec<Validat
         }
     }
 
-    // Rule 17: Σ.gloss present even if empty. Statically enforced by model
-    // (String, not Option<String>), but we assert anyway for defense in depth.
+    // Rule 17: STF-SIR v1 semantic fallback.
     for token in &artifact.ztokens {
-        let _gloss_present: &str = &token.semantic.gloss;
+        let expected_gloss = if token.lexical.plain_text.is_empty() {
+            String::new()
+        } else {
+            normalize_text(&token.lexical.plain_text)
+        };
+
+        if token.semantic.gloss != expected_gloss {
+            errors.push(err(
+                "VAL_17_SEMANTIC_FALLBACK",
+                format!(
+                    "ztoken {} has Σ.gloss {:?}, expected {:?} under the v1 semantic fallback",
+                    token.id, token.semantic.gloss, expected_gloss
+                ),
+            ));
+        }
     }
 
     errors

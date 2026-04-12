@@ -1,5 +1,7 @@
 # STF-SIR
 
+![CI](https://github.com/reasoningbyfigueiredo/stf-sir/actions/workflows/ci.yml/badge.svg)
+
 From tokens to meaning: a foundation for semantic AI context representation.
 
 > Status: STF-SIR v1.0.0-mvp is available as a stable, deterministic reference baseline. Future revisions may extend semantics without breaking v1 artifacts.
@@ -178,6 +180,12 @@ This example is illustrative. The purpose is not to prescribe a final serializat
 - Semantic query and execution model
 - Integration patterns for RAG systems and AI agents
 
+## Research Documents
+
+- [`docs/stf-sir-article.md`](docs/stf-sir-article.md) — v1 article-style foundation for STF-SIR
+- [`docs/sts-formalization.md`](docs/sts-formalization.md) — formal STS v2 mathematical specification
+- [`docs/sts-paper.tex`](docs/sts-paper.tex) — publication-ready LaTeX paper consolidating STF, SIR, SirGraph, retention, and STS
+
 ## Conformance suite
 
 STF-SIR v1 ships with a machine-readable JSON Schema and a data-driven
@@ -234,6 +242,45 @@ The `config_hash` captures:
 Any change to these dimensions is a deliberate bump of `config_hash` and
 requires regenerating all goldens under `examples/` and
 `tests/conformance/valid/`.
+
+## Graph View
+
+STF-SIR now exposes a first SirGraph layer as a deterministic graph view
+over the compiled artifact. The graph is computed in memory from the
+existing `Artifact`; it does not introduce a new serialization format.
+
+```rust
+use stf_sir::compiler;
+
+let artifact = compiler::compile_markdown(
+    "# Title\n\nSemantic tokenization preserves meaning.",
+    None,
+)?;
+
+let graph = artifact.as_sir_graph();
+let z1 = graph.node("z1");
+let outgoing = graph.outgoing("z1");
+let neighbors = graph.neighbors("z1");
+```
+
+See [`docs/sir-graph.md`](docs/sir-graph.md) for the module-level graph
+contract.
+
+## Retention Baseline
+
+The repository also exposes a first operational retention baseline:
+
+\[
+\rho(d) = \langle \rho_L, \rho_S, \rho_\Sigma, \rho_\Phi \rangle
+\]
+
+This baseline is intentionally conservative. It measures artifact-level
+dimension completeness and internal consistency, not the full theoretical
+information-retention model from the STF-SIR article. It is a stable
+starting point for later benchmark-oriented retention work.
+
+See `Artifact::retention_baseline()` and the retention rules documented in
+[`docs/retention-baseline.md`](docs/retention-baseline.md).
 
 ## Stability
 
