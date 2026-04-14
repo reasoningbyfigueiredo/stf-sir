@@ -5,5 +5,6 @@ pub mod model;
 pub mod retention;
 pub mod sir;
 
-pub use error::{CompileError, CompileResult};
-pub use retention::{RetentionBaseline, RetentionScore, RetentionVector};
+pub use error::{CoherenceError, CompileError, CompileResult, ErrorKind, Severity};
+pub use model::{artifact_to_theory, CoherenceVector, Formula, Statement, Theory, TruthValue};
+pub use retention::{CoherenceRetention, RetentionBaseline, RetentionScore, RetentionVector};

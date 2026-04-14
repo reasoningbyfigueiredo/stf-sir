@@ -1,3 +1,7 @@
+pub mod coherence_retention;
+
+pub use coherence_retention::CoherenceRetention;
+
 use std::collections::BTreeSet;
 
 use crate::compiler::semantic::normalize_text;

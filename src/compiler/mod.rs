@@ -5,7 +5,12 @@ use std::path::Path;
 use crate::error::{CompileError, CompileResult};
 use crate::model::{Artifact, CompilerInfo, Diagnostic, DocumentInfo, SourceInfo, ZToken};
 
+pub mod coherence;
 pub mod diagnostics;
+pub mod domain;
+pub mod engine;
+pub mod grounding;
+pub mod inference;
 pub mod lexical;
 pub mod logical;
 pub mod schema;
@@ -13,6 +18,12 @@ pub mod semantic;
 pub mod serializer;
 pub mod syntactic;
 pub mod validator;
+
+pub use engine::{
+    default_engine, formula_engine_with_budget, DefaultEngine, EvaluationResult, FormulaEngine,
+};
+pub use coherence::{FormulaCoherenceChecker, SimpleLogicChecker};
+pub use inference::{FormulaInferenceEngine, RuleBasedInferenceEngine};
 
 const FORMAT: &str = "stf-sir.zmd";
 const VERSION: u32 = 1;

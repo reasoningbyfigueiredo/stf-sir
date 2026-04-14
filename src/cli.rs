@@ -7,7 +7,7 @@ use clap::{Parser, Subcommand};
 use crate::compiler;
 use crate::compiler::validator;
 use crate::error::CompileError;
-use crate::model::DiagnosticSeverity;
+use crate::model::{artifact_to_theory, DiagnosticSeverity};
 
 #[derive(Debug, Parser)]
 #[command(name = "stf-sir")]
@@ -34,6 +34,22 @@ enum Commands {
         #[arg(long = "source")]
         source: Option<PathBuf>,
     },
+    /// Audit the coherence of a compiled `.zmd` artifact.
+    ///
+    /// Evaluates the coherence triple (C_l, C_c, C_o), detects hallucinations
+    /// (locally coherent but ungrounded tokens), contradictions, and
+    /// operationally sterile statements.
+    ///
+    /// Examples:
+    ///   stf-sir audit-coherence examples/sample.zmd
+    ///   stf-sir audit-coherence examples/sample.zmd --json
+    AuditCoherence {
+        /// Path to the `.zmd` artifact to audit.
+        artifact: PathBuf,
+        /// Emit machine-readable JSON output.
+        #[arg(long = "json")]
+        json: bool,
+    },
 }
 
 pub fn run() -> Result<()> {
@@ -45,6 +61,7 @@ pub fn run() -> Result<()> {
             Err(err) => Err(format_compile_error(err)),
         },
         Commands::Validate { artifact, source } => run_validate(&artifact, source.as_deref()),
+        Commands::AuditCoherence { artifact, json } => run_audit_coherence(&artifact, json),
     }
 }
 
@@ -74,6 +91,54 @@ fn run_validate(artifact_path: &Path, source_path: Option<&Path>) -> Result<()> 
             errors.len()
         ))
     }
+}
+
+fn run_audit_coherence(artifact_path: &Path, json: bool) -> Result<()> {
+    let yaml = fs::read_to_string(artifact_path)
+        .with_context(|| format!("failed to read artifact {}", artifact_path.display()))?;
+
+    let artifact: crate::model::Artifact = serde_yaml_ng::from_str(&yaml)
+        .with_context(|| format!("failed to parse artifact {}", artifact_path.display()))?;
+
+    let theory = artifact_to_theory(&artifact);
+
+    let engine = compiler::default_engine();
+    let result = engine.audit_theory(&theory);
+
+    if json {
+        println!("{}", serde_json::to_string_pretty(&result.to_json_value())?);
+    } else {
+        println!(
+            "coherence: {}",
+            result.coherence
+        );
+        println!("grounded:          {}", result.grounded);
+        println!("useful_information:{}", result.useful_information);
+        println!("derived_count:     {}", result.derived_count);
+
+        if result.errors.is_empty() {
+            println!("errors: none");
+        } else {
+            println!("errors ({}):", result.errors.len());
+            for e in &result.errors {
+                println!("  [{}/{}] {}", e.kind, e.severity, e.message);
+            }
+        }
+
+        if result.errors.iter().any(|e| {
+            matches!(
+                e.severity,
+                crate::error::Severity::High | crate::error::Severity::Critical
+            )
+        }) {
+            return Err(anyhow!(
+                "coherence audit found {} issue(s)",
+                result.errors.len()
+            ));
+        }
+    }
+
+    Ok(())
 }
 
 fn format_compile_error(err: CompileError) -> anyhow::Error {
