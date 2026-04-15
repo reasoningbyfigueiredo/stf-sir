@@ -109,10 +109,10 @@ This makes SirGraph suitable as the first stable graph layer over STF-SIR v1.
 
 SirGraph does not yet provide:
 
-- sentence-level or entity-level materialization,
-- inference or semantic closure,
-- external knowledge graph integration,
-- graph serialization beyond `.zmd`,
-- speculative node or edge kinds not already present in the artifact.
+- **[aspiracional]** sentence-level or entity-level materialization,
+- **[aspiracional]** inference or semantic closure,
+- **[aspiracional]** external knowledge graph integration,
+- **[aspiracional]** graph serialization beyond `.zmd`,
+- **[aspiracional]** speculative node or edge kinds not already present in the artifact.
 
 Those are intentionally deferred so the first graph layer can remain minimal, deterministic, and stable.

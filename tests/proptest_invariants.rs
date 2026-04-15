@@ -29,7 +29,9 @@ use std::collections::HashSet;
 use proptest::prelude::*;
 use stf_sir::compiler;
 use stf_sir::compiler::validator;
-use stf_sir::model::RelationCategory;
+use stf_sir::compiler::recommended_engine_with_budget;
+use stf_sir::model::{Provenance, RelationCategory, Statement, StatementKind, Theory};
+use std::collections::BTreeMap;
 
 /// Produce a single ASCII word of 1..6 lowercase characters.
 fn word() -> impl Strategy<Value = String> {
@@ -61,6 +63,73 @@ fn document() -> impl Strategy<Value = String> {
         out.push('\n');
         out
     })
+}
+
+// ---------------------------------------------------------------------------
+// ADR-SEM-001 Rule 3.2 — INV-101-1 property test
+//
+// For any Statement and any Theory, the RecommendedEngine must satisfy:
+//   IF result.useful_information == true THEN result.grounded == true
+// ---------------------------------------------------------------------------
+
+/// Generate a Statement with varying grounding (provenance.grounded ∈ {true, false}).
+fn arb_statement() -> impl Strategy<Value = Statement> {
+    // grounded flag, optional source_id, optional anchor, text
+    (
+        proptest::bool::ANY,
+        proptest::option::of("[a-z]{3,8}"),
+        proptest::option::of("[a-z]{3,8}"),
+        "[a-z]{1,6}",
+    )
+        .prop_map(|(grounded_flag, source, anchor, text)| {
+            let mut p = Provenance::default();
+            p.grounded = grounded_flag;
+            if let Some(s) = source {
+                p.source_ids.insert(format!("sha256:{s}"));
+            }
+            if let Some(a) = anchor {
+                p.anchors.insert(a);
+            }
+            Statement {
+                id: "prop-stmt".into(),
+                text,
+                kind: StatementKind::Atomic,
+                domain: "test".into(),
+                provenance: p,
+                metadata: BTreeMap::new(),
+                formula: None,
+                semantic_dimensions: None,
+            }
+        })
+}
+
+proptest! {
+    #![proptest_config(ProptestConfig {
+        cases: 256,
+        .. ProptestConfig::default()
+    })]
+
+    /// INV-101-1: useful_information == true → grounded == true (ADR-SEM-001 Rule 3.2).
+    ///
+    /// This property must hold for all possible Statement provenances.
+    /// A counterexample would mean the engine reports "useful information"
+    /// for an ungrounded (potentially hallucinated) statement.
+    #[test]
+    fn useful_information_grounding_invariant(stmt in arb_statement()) {
+        let engine = recommended_engine_with_budget(usize::MAX);
+        let theory = Theory::new();
+        let result = engine.evaluate_statement(&theory, &stmt);
+        if result.useful_information {
+            prop_assert!(
+                result.grounded,
+                "INV-101-1 violated: useful_information=true but grounded=false \
+                 for stmt with provenance: grounded={}, source_ids={}, anchors={}",
+                stmt.provenance.grounded,
+                stmt.provenance.source_ids.len(),
+                stmt.provenance.anchors.len(),
+            );
+        }
+    }
 }
 
 proptest! {

@@ -102,7 +102,9 @@ fn run_audit_coherence(artifact_path: &Path, json: bool) -> Result<()> {
 
     let theory = artifact_to_theory(&artifact);
 
-    let engine = compiler::default_engine();
+    // ADR-SEM-001 I-6: use the canonical recommended engine (Formula-AST backends,
+    // explicit step budget) instead of the deprecated surface-text default engine.
+    let engine = compiler::recommended_engine();
     let result = engine.audit_theory(&theory);
 
     if json {

@@ -9,21 +9,35 @@ pub mod coherence;
 pub mod diagnostics;
 pub mod domain;
 pub mod engine;
+pub mod enricher;
+pub mod frontend;
 pub mod grounding;
 pub mod inference;
+pub mod lang;
 pub mod lexical;
 pub mod logical;
+pub mod profile;
 pub mod schema;
 pub mod semantic;
 pub mod serializer;
 pub mod syntactic;
 pub mod validator;
 
+pub use coherence::{FormulaCoherenceChecker, LogicalCoherenceChecker, SimpleLogicChecker};
 pub use engine::{
-    default_engine, formula_engine_with_budget, DefaultEngine, EvaluationResult, FormulaEngine,
+    // Recommended (formula-AST) engine — prefer these in new code
+    recommended_engine, recommended_engine_with_budget, recommended_engine_with_sir,
+    RecommendedEngine, RECOMMENDED_STEP_BUDGET,
+    // Formula engine (explicit alias, same backends as RecommendedEngine)
+    formula_engine_with_budget, FormulaEngine,
+    // Shared result type
+    EvaluationResult,
 };
-pub use coherence::{FormulaCoherenceChecker, SimpleLogicChecker};
-pub use inference::{FormulaInferenceEngine, RuleBasedInferenceEngine};
+// Legacy — deprecated since 1.1.0, kept for backwards compatibility
+#[allow(deprecated)]
+pub use engine::{default_engine, DefaultEngine};
+pub use grounding::{GroundingChecker, GroundingResult, ProvenanceGroundingChecker, SirGroundingChecker};
+pub use inference::{FormulaInferenceEngine, InferenceEngine, RuleBasedInferenceEngine};
 
 const FORMAT: &str = "stf-sir.zmd";
 const VERSION: u32 = 1;

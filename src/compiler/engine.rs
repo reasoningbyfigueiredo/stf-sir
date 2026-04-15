@@ -56,6 +56,19 @@ pub struct EvaluationResult {
     pub errors: Vec<CoherenceError>,
 }
 
+impl crate::model::SemanticDimensions {
+    /// Constructs [`SemanticDimensions`][crate::model::SemanticDimensions] from an
+    /// [`EvaluationResult`].
+    ///
+    /// # Invariants (FEAT-201-5)
+    ///
+    /// - `from_evaluation(r).coherence == r.coherence` (INV-201-5)
+    /// - `from_evaluation(r).transformation_delta == 0.0` in v1 (INV-201-7)
+    pub fn from_evaluation(result: &EvaluationResult) -> Self {
+        Self::from_parts(result.coherence.clone(), result.grounded, 0.0)
+    }
+}
+
 impl EvaluationResult {
     /// Serialize to a JSON-friendly value (for CLI --json output).
     pub fn to_json_value(&self) -> serde_json::Value {
@@ -160,8 +173,11 @@ where
         };
         let operational_ok = !derived.is_empty();
 
-        // --- ICE ---
-        let useful_information = logical_ok && operational_ok;
+        // --- ICE (ADR-SEM-001 Rule 3.2) ---
+        // useful_information requires C_l ∧ C_o ∧ Ground.
+        // A statement that is coherent and productive but ungrounded is NOT useful
+        // information — it is a candidate hallucination (INV-101-1).
+        let useful_information = logical_ok && operational_ok && grounding_result.is_grounded;
 
         // --- Errors ---
         let mut errors = Vec::new();
@@ -297,7 +313,9 @@ where
             },
             grounded: ungrounded_ids.is_empty(),
             derived_count: derived.len(),
-            useful_information: logical_ok && operational_ok,
+            // ADR-SEM-001 Rule 3.2: useful_information requires C_l ∧ C_o ∧ Ground.
+            // A theory is only producing useful information when all statements are grounded.
+            useful_information: logical_ok && operational_ok && ungrounded_ids.is_empty(),
             steps_used: steps,
             errors,
         }
@@ -305,15 +323,121 @@ where
 }
 
 // ---------------------------------------------------------------------------
+// ADR-SEM-001 I-6: Canonical engine selection
+// ---------------------------------------------------------------------------
 
-/// Convenience alias for the default engine (simple text backends, no budget).
+/// Step budget calibrated for artifacts up to ~1 000 tokens (n² pairs ≈ 10⁶).
+///
+/// With `C_c` approximated as a step-budget gate (ADR-SEM-001 Rule 3.3), a
+/// budget of 1 000 000 steps is tractable in microseconds for typical documents
+/// while correctly flagging theories that would require O(n²) comparisons on
+/// very large artifact batches.
+pub const RECOMMENDED_STEP_BUDGET: usize = 1_000_000;
+
+/// The recommended engine for production use.
+///
+/// Uses Formula-AST backends for structurally correct contradiction detection
+/// and modus-ponens inference, with provenance-based grounding and an explicit
+/// step budget.
+///
+/// Prefer this alias over [`DefaultEngine`] in all new code.
+/// For artifacts where a compiled [`crate::sir::SirGraph`] is available, use
+/// [`recommended_engine_with_sir`] for stronger grounding guarantees.
+pub type RecommendedEngine = StfEngine<
+    crate::compiler::coherence::FormulaCoherenceChecker,
+    crate::compiler::inference::FormulaInferenceEngine,
+    crate::compiler::grounding::ProvenanceGroundingChecker,
+>;
+
+/// Build the [`RecommendedEngine`] with [`RECOMMENDED_STEP_BUDGET`].
+pub fn recommended_engine() -> RecommendedEngine {
+    StfEngine {
+        logic: crate::compiler::coherence::FormulaCoherenceChecker,
+        inference: crate::compiler::inference::FormulaInferenceEngine,
+        grounding: crate::compiler::grounding::ProvenanceGroundingChecker,
+        step_budget: RECOMMENDED_STEP_BUDGET,
+    }
+}
+
+/// Build the [`RecommendedEngine`] with an explicit step budget.
+///
+/// Use this when you need to tune `C_c` sensitivity for your artifact size.
+/// Setting `budget = usize::MAX` is equivalent to disabling the `C_c` gate
+/// (`C_c = Unknown` for all inputs).
+pub fn recommended_engine_with_budget(budget: usize) -> RecommendedEngine {
+    StfEngine {
+        logic: crate::compiler::coherence::FormulaCoherenceChecker,
+        inference: crate::compiler::inference::FormulaInferenceEngine,
+        grounding: crate::compiler::grounding::ProvenanceGroundingChecker,
+        step_budget: budget,
+    }
+}
+
+/// Build a formula engine with SIR-graph-backed grounding and the recommended
+/// step budget.
+///
+/// This engine uses [`crate::compiler::grounding::SirGroundingChecker`] which
+/// verifies that a statement's `id` is present in the compiled [`crate::sir::SirGraph`].
+/// This is the strongest grounding guarantee available: it rules out statements
+/// that were not produced by the compilation pipeline, even if they carry valid
+/// provenance fields.
+///
+/// Returns a concrete `StfEngine` (not the `RecommendedEngine` alias) because
+/// `SirGroundingChecker` carries a lifetime bound on the graph reference.
+pub fn recommended_engine_with_sir(
+    graph: &crate::sir::SirGraph,
+) -> StfEngine<
+    crate::compiler::coherence::FormulaCoherenceChecker,
+    crate::compiler::inference::FormulaInferenceEngine,
+    crate::compiler::grounding::SirGroundingChecker<'_>,
+> {
+    StfEngine {
+        logic: crate::compiler::coherence::FormulaCoherenceChecker,
+        inference: crate::compiler::inference::FormulaInferenceEngine,
+        grounding: crate::compiler::grounding::SirGroundingChecker { graph },
+        step_budget: RECOMMENDED_STEP_BUDGET,
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Legacy aliases — kept for backwards compatibility
+// ---------------------------------------------------------------------------
+
+/// Surface-text engine with unbounded step budget.
+///
+/// # Deprecation
+///
+/// **Deprecated since 1.1.0.** Use [`RecommendedEngine`] and [`recommended_engine`]
+/// instead. `DefaultEngine` uses surface-text backends (`SimpleLogicChecker`,
+/// `RuleBasedInferenceEngine`) which are less precise than the Formula-AST
+/// backends used by `RecommendedEngine`. In particular:
+///
+/// - `SimpleLogicChecker` can produce false positives from substring matches.
+/// - `RuleBasedInferenceEngine` only fires modus ponens on the literal string
+///   `"A -> B"`, not on structurally parsed implications.
+/// - `step_budget = usize::MAX` means `C_c` is always `Unknown`.
+///
+/// `DefaultEngine` will be removed in v2.0.0.
+#[deprecated(
+    since = "1.1.0",
+    note = "Use `RecommendedEngine` and `recommended_engine()` instead."
+)]
 pub type DefaultEngine = StfEngine<
     crate::compiler::coherence::SimpleLogicChecker,
     crate::compiler::inference::RuleBasedInferenceEngine,
     crate::compiler::grounding::ProvenanceGroundingChecker,
 >;
 
-/// Build the default engine (unbounded step budget → C_c = Unknown).
+/// Build the legacy surface-text engine.
+///
+/// # Deprecation
+///
+/// **Deprecated since 1.1.0.** Use [`recommended_engine`] instead.
+#[deprecated(
+    since = "1.1.0",
+    note = "Use `recommended_engine()` instead."
+)]
+#[allow(deprecated)]
 pub fn default_engine() -> DefaultEngine {
     StfEngine {
         logic: crate::compiler::coherence::SimpleLogicChecker,
@@ -326,6 +450,10 @@ pub fn default_engine() -> DefaultEngine {
 /// Build the formula engine with explicit budget.
 ///
 /// C_c = Satisfied if the consistency check terminates in ≤ `budget` steps.
+///
+/// This is equivalent to [`recommended_engine_with_budget`]; both are kept
+/// for clarity at call sites that want to be explicit about using the formula
+/// backend.
 pub type FormulaEngine = StfEngine<
     crate::compiler::coherence::FormulaCoherenceChecker,
     crate::compiler::inference::FormulaInferenceEngine,

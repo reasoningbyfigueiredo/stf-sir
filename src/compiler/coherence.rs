@@ -115,19 +115,28 @@ impl LogicalCoherenceChecker for SimpleLogicChecker {
 
 /// Formula-based coherence checker.
 ///
-/// Parses each statement's text into a `Formula` and uses structural
-/// `Formula::contradicts` for detection, eliminating false negatives from
-/// whitespace or case differences and false positives from substring matches.
+/// Uses the `Formula` AST for structurally correct contradiction detection
+/// (Theorem A4).  When a `Statement` carries a pre-parsed `formula`, that is
+/// used directly; otherwise the checker falls back to `Formula::parse(&text)`.
+/// This eliminates false negatives from whitespace/case differences and false
+/// positives from substring matches, and avoids redundant re-parsing when
+/// `artifact_to_theory` has already embedded formulas.
 ///
 /// Contradiction count: O(n²) pairwise checks; step count is reported in
 /// `Inconsistency.steps` and used by the C_c budget estimator in the engine.
 pub struct FormulaCoherenceChecker;
 
+/// Return the formula for a statement: use embedded if available, else parse.
+#[inline]
+fn resolve_formula(stmt: &Statement) -> Option<Formula> {
+    stmt.formula.clone().or_else(|| Formula::parse(&stmt.text))
+}
+
 impl LogicalCoherenceChecker for FormulaCoherenceChecker {
     fn check_consistency(&self, theory: &Theory) -> Result<(), Inconsistency> {
         let parsed: Vec<(StatementId, Option<Formula>)> = theory
             .iter()
-            .map(|s| (s.id.clone(), Formula::parse(&s.text)))
+            .map(|s| (s.id.clone(), resolve_formula(s)))
             .collect();
 
         let mut steps = 0usize;
@@ -158,15 +167,12 @@ impl LogicalCoherenceChecker for FormulaCoherenceChecker {
         theory: &Theory,
         candidate: &Statement,
     ) -> Result<(), Inconsistency> {
-        let candidate_formula = Formula::parse(&candidate.text);
+        let candidate_formula = resolve_formula(candidate);
         let mut steps = 0usize;
 
         for stmt in theory.iter() {
             steps += 1;
-            if let (Some(cf), Some(sf)) = (
-                candidate_formula.as_ref(),
-                Formula::parse(&stmt.text).as_ref(),
-            ) {
+            if let (Some(cf), Some(sf)) = (candidate_formula.as_ref(), resolve_formula(stmt).as_ref()) {
                 if cf.contradicts(sf) {
                     return Err(Inconsistency {
                         message: format!(

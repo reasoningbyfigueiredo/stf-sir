@@ -142,6 +142,47 @@ pub fn assert_graph_indexes_consistent(graph: &SirGraph) {
     }
 }
 
+// ---------------------------------------------------------------------------
+// Theory builder helpers — used across multiple test suites
+
+/// Build a `Theory` from `(id, text)` pairs; all statements are atomic.
+pub fn atomic_theory(pairs: &[(&str, &str)]) -> stf_sir::model::Theory {
+    let mut t = stf_sir::model::Theory::new();
+    for &(id, text) in pairs {
+        t.insert(stf_sir::model::Statement::atomic(id, text, "test"));
+    }
+    t
+}
+
+/// Build a `Theory` from `(id, text, source_id)` triples; all statements are grounded.
+pub fn grounded_theory(triples: &[(&str, &str, &str)]) -> stf_sir::model::Theory {
+    let mut t = stf_sir::model::Theory::new();
+    for &(id, text, src) in triples {
+        t.insert(stf_sir::model::Statement::grounded(id, text, "test", src));
+    }
+    t
+}
+
+/// Build a `MappingResult` stub for retention tests.
+pub fn make_mapping(
+    id: &str,
+    rho: f32,
+    structure_preserved: bool,
+    drift: f32,
+) -> stf_sir::compiler::domain::MappingResult {
+    stf_sir::compiler::domain::MappingResult {
+        source_statement_id: id.to_string(),
+        target_statement: stf_sir::model::Statement::atomic(
+            format!("{id}:mapped"),
+            "mapped",
+            "target",
+        ),
+        retention_score: rho,
+        structure_preserved,
+        semantic_drift_score: drift,
+    }
+}
+
 pub fn assert_retention_unit_interval(artifact: &Artifact) {
     let baseline = artifact.retention_baseline();
     for value in [

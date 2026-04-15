@@ -1,0 +1,239 @@
+(* STF-SIR ZToken v2 — EBNF Grammar *)
+(* Version: 2.0.0-alpha  Created: 2026-04-14 *)
+(*                                           *)
+(* Notation: Standard ISO/IEC 14977 EBNF.   *)
+(* Optional fields use brackets [ ... ].    *)
+(* Choice uses |.  Repetition uses { ... }. *)
+
+(* ─────────────────────────────────────────── *)
+(* Top-level artifact                          *)
+(* ─────────────────────────────────────────── *)
+
+artifact =
+    "format:"       , string_value ,
+    "version:"      , version_number ,
+    "source:"       , source_info ,
+    "compiler:"     , compiler_info ,
+    "document:"     , document_info ,
+    "ztokens:"      , ztoken_list ,
+    "relations:"    , relation_list ,
+    "diagnostics:"  , diagnostic_list ,
+    [ "extensions:" , extension_map ] ;
+
+version_number = "1" | "2" ;
+
+(* ─────────────────────────────────────────── *)
+(* ZToken v2                                   *)
+(* ─────────────────────────────────────────── *)
+
+ztoken_list = "-" , ztoken , { "-" , ztoken } | "[]" ;
+
+ztoken =
+    "id:"           , ztoken_id ,
+    "lexical:"      , lexical_dimension ,
+    "syntactic:"    , syntactic_dimension ,
+    "semantic:"     , semantic_dimension ,
+    "logical:"      , logical_dimension ,
+    [ "context:"    , contextual_dimension ] ,
+    [ "pragmatic:"  , pragmatic_dimension ] ,
+    [ "temporal:"   , temporal_dimension ] ,
+    [ "coherence_eval:" , coherence_eval_dimension ] ;
+
+(* ─────────────────────────────────────────── *)
+(* L — Lexical dimension (v1, MUST)            *)
+(* ─────────────────────────────────────────── *)
+
+lexical_dimension =
+    "source_text:"  , non_empty_string ,
+    "span:"         , source_span ,
+    [ "normalized:" , string_value ] ,
+    [ "language:"   , bcp47_tag ] ;
+
+source_span =
+    "start:"        , span_position ,
+    "end:"          , span_position ;
+
+span_position =
+    "offset:"       , non_negative_integer ,
+    "line:"         , positive_integer ,
+    "column:"       , positive_integer ;
+
+(* ─────────────────────────────────────────── *)
+(* S — Syntactic dimension (v1, MUST)          *)
+(* ─────────────────────────────────────────── *)
+
+syntactic_dimension =
+    "node_type:"     , node_type_value ,
+    "depth:"         , non_negative_integer ,
+    "sibling_index:" , non_negative_integer ,
+    [ "parent_id:"   , ztoken_id ] ,
+    [ "children_ids:", id_list ] ;
+
+node_type_value =
+    "heading" | "paragraph" | "blockquote" | "list" | "list_item"
+    | "code_block" | "table" | "footnote_definition"
+    (* v2 sentence profile *)
+    | "sentence" | "clause" | "phrase"
+    (* v2 entity profile *)
+    | "entity" | "span" | "mention" ;
+
+(* ─────────────────────────────────────────── *)
+(* Σ — Semantic dimension (v1, MUST)           *)
+(* ─────────────────────────────────────────── *)
+
+semantic_dimension =
+    "gloss:"        , non_empty_string ,
+    [ "tags:"       , string_list ] ,
+    [ "domain:"     , string_value ] ;
+
+(* ─────────────────────────────────────────── *)
+(* Φ — Logical dimension (v1, MUST)            *)
+(* ─────────────────────────────────────────── *)
+
+logical_dimension =
+    [ "formula:"      , formula_string ] ,
+    [ "relation_ids:" , id_list ] ;
+
+(* ─────────────────────────────────────────── *)
+(* C — Contextual dimension (v2, MAY)          *)
+(* ─────────────────────────────────────────── *)
+
+contextual_dimension =
+    [ "context_id:"      , context_id_value ] ,
+    [ "scope:"           , string_value ] ,
+    [ "reference_frame:" , reference_frame_value ] ;
+
+context_id_value = ? /^[a-z0-9_.-]+$/ ? ;
+
+reference_frame_value = "author" | "system" | "external" | namespaced_string ;
+
+(* ─────────────────────────────────────────── *)
+(* P — Pragmatic dimension (v2, MAY)           *)
+(* ─────────────────────────────────────────── *)
+
+pragmatic_dimension =
+    [ "intent:"      , intent_value ] ,
+    [ "speech_act:"  , speech_act_value ] ,
+    [ "register:"    , register_value ] ;
+
+intent_value =
+    "assert" | "query" | "command" | "define" | "exemplify" | "qualify"
+    | namespaced_string ;
+
+speech_act_value =
+    "illocution" | "perlocution" | "locution" | namespaced_string ;
+
+register_value =
+    "formal" | "informal" | "technical" | "literary" | namespaced_string ;
+
+(* ─────────────────────────────────────────── *)
+(* Δ — Temporal dimension (v2, MAY)            *)
+(* ─────────────────────────────────────────── *)
+
+temporal_dimension =
+    [ "created_at:"  , iso8601_datetime ] ,
+    [ "modified_at:" , iso8601_datetime ] ,
+    [ "valid_from:"  , iso8601_datetime ] ,
+    [ "valid_to:"    , iso8601_datetime ] ;
+
+(* Constraint (not expressible in EBNF): valid_from ≤ valid_to when both present *)
+
+(* ─────────────────────────────────────────── *)
+(* Ω — Coherence/validation dimension (v2, MAY) *)
+(* ─────────────────────────────────────────── *)
+
+coherence_eval_dimension =
+    [ "coherence_score:"    , unit_float ] ,
+    [ "validation_flags:"   , validation_flag_list ] ,
+    [ "useful_information:" , boolean_value ] ;
+
+validation_flag_list =
+    "-" , validation_flag_id , { "-" , validation_flag_id }
+    | "[]" ;
+
+validation_flag_id = ? /^VAL_[0-9]{2}$/ ? ;
+
+(* ─────────────────────────────────────────── *)
+(* Relations                                   *)
+(* ─────────────────────────────────────────── *)
+
+relation_list = "-" , relation , { "-" , relation } | "[]" ;
+
+relation =
+    "id:"       , relation_id ,
+    "type:"     , relation_type ,
+    "source:"   , ztoken_id ,
+    "target:"   , ztoken_id ,
+    "category:" , relation_category ,
+    "stage:"    , relation_stage ;
+
+relation_type =
+    (* v1 *)
+    "contains" | "precedes"
+    (* v2 *)
+    | "supports" | "contradicts" | "elaborates"
+    | "refers_to" | "cites" ;
+
+relation_category = "structural" | "logical" | "semantic-link" ;
+
+relation_stage = "lexical" | "syntactic" | "semantic" | "logical" ;
+
+(* ─────────────────────────────────────────── *)
+(* Source, Compiler, Document                  *)
+(* ─────────────────────────────────────────── *)
+
+source_info =
+    "path:"         , string_value ,
+    "media_type:"   , string_value ,
+    "encoding:"     , string_value ,
+    "length_bytes:" , non_negative_integer ,
+    "sha256:"       , sha256_value ;
+
+compiler_info =
+    "name:"         , non_empty_string ,
+    "version:"      , semver_string ,
+    "config_hash:"  , sha256_value ,
+    [ "profile:"    , profile_id ] ;
+
+document_info =
+    "language:"       , bcp47_tag ,
+    "token_count:"    , non_negative_integer ,
+    "relation_count:" , non_negative_integer ,
+    [ "root_token_ids:" , id_list ] ;
+
+(* ─────────────────────────────────────────── *)
+(* Diagnostics                                 *)
+(* ─────────────────────────────────────────── *)
+
+diagnostic_list = "-" , diagnostic , { "-" , diagnostic } | "[]" ;
+
+diagnostic =
+    "code:"     , string_value ,
+    "stage:"    , string_value ,
+    "severity:" , severity_value ,
+    "message:"  , string_value ;
+
+severity_value = "ERROR" | "WARNING" | "INFO" ;
+
+(* ─────────────────────────────────────────── *)
+(* Primitives                                  *)
+(* ─────────────────────────────────────────── *)
+
+ztoken_id       = ? non-empty string matching /^z[0-9]+$/ ? ;
+relation_id     = ? non-empty string ? ;
+profile_id      = ? non-empty string ? ;
+sha256_value    = "sha256:" , ? 64 lowercase hex digits ? ;
+semver_string   = ? /^[0-9]+\.[0-9]+\.[0-9]+(-.+)?$/ ? ;
+bcp47_tag       = ? valid BCP 47 language tag or "und" ? ;
+iso8601_datetime = ? valid ISO 8601 datetime string ? ;
+namespaced_string = ? non-empty string containing ":" ? ;
+formula_string  = ? logical formula in surface syntax ? ;
+unit_float      = ? IEEE 754 double in [0.0, 1.0] ? ;
+boolean_value   = "true" | "false" ;
+non_empty_string   = ? string with length ≥ 1 ? ;
+string_value       = ? any string ? ;
+non_negative_integer = ? integer ≥ 0 ? ;
+positive_integer    = ? integer ≥ 1 ? ;
+id_list         = "-" , string_value , { "-" , string_value } | "[]" ;
+string_list     = "-" , string_value , { "-" , string_value } | "[]" ;
+extension_map   = ? arbitrary YAML mapping ? ;

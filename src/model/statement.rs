@@ -1,5 +1,8 @@
 use std::collections::{BTreeMap, BTreeSet};
 
+use crate::model::formula::Formula;
+use crate::model::semantic_dimensions::SemanticDimensions;
+
 pub type StatementId = String;
 pub type DomainId = String;
 pub type SourceId = String;
@@ -39,7 +42,13 @@ pub struct Provenance {
 /// A propositional statement within a theory.
 ///
 /// Maps to the notion of a proposition p ∈ U in the coherence paper.
-#[derive(Debug, Clone, PartialEq, Eq)]
+///
+/// The `formula` field carries a pre-parsed `Formula` so that coherence and
+/// inference engines can operate directly on the AST without re-parsing `text`
+/// on every call.  It is `None` for statements whose text does not conform to
+/// any recognised formula syntax, or for statements constructed without
+/// explicit formula enrichment.  Use `Statement::with_formula` to attach one.
+#[derive(Debug, Clone, PartialEq)]
 pub struct Statement {
     pub id: StatementId,
     /// Surface text of the proposition (used for logical normalization).
@@ -49,6 +58,16 @@ pub struct Statement {
     pub domain: DomainId,
     pub provenance: Provenance,
     pub metadata: BTreeMap<String, String>,
+    /// Pre-parsed logical formula; `None` means "not yet parsed" or
+    /// "unparseable".  Engines fall back to `Formula::parse(&self.text)` when
+    /// this is `None`.
+    pub formula: Option<Formula>,
+    /// Semantic dimensions of second order (C/P/Δ/Ω).
+    ///
+    /// `None` if the statement has not been evaluated by the engine.
+    /// Set by calling [`SemanticDimensions::from_evaluation`] with an
+    /// [`EvaluationResult`][crate::compiler::EvaluationResult].
+    pub semantic_dimensions: Option<SemanticDimensions>,
 }
 
 impl Statement {
@@ -61,6 +80,8 @@ impl Statement {
             domain: domain.into(),
             provenance: Provenance::default(),
             metadata: BTreeMap::new(),
+            formula: None,
+            semantic_dimensions: None,
         }
     }
 
@@ -82,6 +103,14 @@ impl Statement {
             domain: domain.into(),
             provenance,
             metadata: BTreeMap::new(),
+            formula: None,
+            semantic_dimensions: None,
         }
+    }
+
+    /// Builder: attach a pre-parsed formula, replacing any existing one.
+    pub fn with_formula(mut self, formula: Formula) -> Self {
+        self.formula = Some(formula);
+        self
     }
 }

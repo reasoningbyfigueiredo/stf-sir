@@ -1,0 +1,323 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://stf-sir.org/schemas/zmd-v2.schema.json",
+  "title": "STF-SIR .zmd v2 artifact",
+  "description": "Structural schema for STF-SIR v2 artifacts. Backward-compatible superset of v1: version 1 artifacts validate here with the same constraints. Version 2 artifacts additionally allow C/P/Δ/Ω dimensions, new relation types, and language detection.",
+  "type": "object",
+  "required": [
+    "format",
+    "version",
+    "source",
+    "compiler",
+    "document",
+    "ztokens",
+    "relations",
+    "diagnostics"
+  ],
+  "additionalProperties": true,
+  "properties": {
+    "format": {
+      "type": "string",
+      "const": "stf-sir.zmd"
+    },
+    "version": {
+      "type": "integer",
+      "enum": [1, 2],
+      "description": "Artifact version. 1 = v1 format (no new dimensions). 2 = v2 format (C/P/Δ/Ω optional dimensions, new relation types, BCP-47 language)."
+    },
+    "source": { "$ref": "#/$defs/source" },
+    "compiler": { "$ref": "#/$defs/compiler" },
+    "document": { "$ref": "#/$defs/document" },
+    "ztokens": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/ztoken" }
+    },
+    "relations": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/relation" }
+    },
+    "diagnostics": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/diagnostic" }
+    },
+    "sirgraph": {
+      "$ref": "#/$defs/sirgraph_export",
+      "description": "Optional SirGraph export section. Absent in v1 artifacts; optional in v2."
+    },
+    "extensions": {
+      "type": "object",
+      "description": "Top-level extension namespace. Plugins use namespaced keys (e.g., 'myplugin.field')."
+    }
+  },
+  "$defs": {
+    "source": {
+      "type": "object",
+      "required": ["media_type", "encoding", "length_bytes", "sha256"],
+      "properties": {
+        "path": { "type": "string" },
+        "media_type": { "type": "string", "const": "text/markdown" },
+        "encoding": { "type": "string", "const": "utf-8" },
+        "length_bytes": { "type": "integer", "minimum": 0 },
+        "sha256": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" }
+      }
+    },
+    "compiler": {
+      "type": "object",
+      "required": ["name", "version", "config_hash"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "version": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+(-.+)?$" },
+        "config_hash": { "type": "string" },
+        "profile": { "type": "string" }
+      }
+    },
+    "document": {
+      "type": "object",
+      "required": ["language", "token_count", "relation_count", "root_token_ids"],
+      "properties": {
+        "language": {
+          "type": "string",
+          "description": "BCP-47 language tag or 'und' for undetermined. In v2, detection is required; in v1, always 'und'."
+        },
+        "token_count": { "type": "integer", "minimum": 0 },
+        "relation_count": { "type": "integer", "minimum": 0 },
+        "root_token_ids": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "span": {
+      "type": "object",
+      "required": ["start_byte", "end_byte", "start_line", "end_line"],
+      "properties": {
+        "start_byte": { "type": "integer", "minimum": 0 },
+        "end_byte": { "type": "integer", "minimum": 0 },
+        "start_line": { "type": "integer", "minimum": 1 },
+        "end_line": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "lexical": {
+      "type": "object",
+      "required": ["source_text", "plain_text", "normalized_text", "span"],
+      "properties": {
+        "source_text": { "type": "string" },
+        "plain_text": { "type": "string" },
+        "normalized_text": { "type": "string" },
+        "span": { "$ref": "#/$defs/span" }
+      }
+    },
+    "syntactic": {
+      "type": "object",
+      "required": ["node_type", "parent_id", "depth", "sibling_index", "path"],
+      "properties": {
+        "node_type": { "type": "string" },
+        "parent_id": { "type": ["string", "null"] },
+        "depth": { "type": "integer", "minimum": 0 },
+        "sibling_index": { "type": "integer", "minimum": 0 },
+        "path": { "type": "string" }
+      }
+    },
+    "semantic": {
+      "type": "object",
+      "required": ["gloss"],
+      "properties": {
+        "gloss": { "type": "string" },
+        "concepts": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+        "embedding_ref": {
+          "type": ["string", "null"],
+          "description": "URI reference to the embedding anchor in the vector store. Format: 'rag:<provider>/<artifact_sha256>/<ztoken_id>'."
+        }
+      }
+    },
+    "logical": {
+      "type": "object",
+      "required": ["relation_ids"],
+      "properties": {
+        "relation_ids": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "contextual": {
+      "type": "object",
+      "description": "C — Contextual dimension (v2 only, all fields optional).",
+      "properties": {
+        "context_id": {
+          "type": "string",
+          "pattern": "^[a-z0-9_.-]+$",
+          "description": "Identifier of the discourse context or thread."
+        },
+        "scope": {
+          "type": "string",
+          "description": "Lexical scope or section containing this token."
+        },
+        "reference_frame": {
+          "type": "string",
+          "description": "Epistemic reference frame (e.g., 'author', 'system', 'external')."
+        }
+      }
+    },
+    "pragmatic": {
+      "type": "object",
+      "description": "P — Pragmatic dimension (v2 only, all fields optional).",
+      "properties": {
+        "intent": {
+          "type": "string",
+          "description": "High-level communicative intent.",
+          "enum": ["assert", "query", "command", "define", "exemplify", "qualify"]
+        },
+        "speech_act": {
+          "type": "string",
+          "description": "Austinian speech act type."
+        },
+        "register": {
+          "type": "string",
+          "description": "Language register.",
+          "enum": ["formal", "informal", "technical", "literary"]
+        }
+      }
+    },
+    "temporal": {
+      "type": "object",
+      "description": "Δ — Temporal dimension (v2 only, all fields optional).",
+      "properties": {
+        "created_at": { "type": "string", "format": "date-time" },
+        "modified_at": { "type": "string", "format": "date-time" },
+        "valid_from": { "type": "string", "format": "date-time" },
+        "valid_to": { "type": "string", "format": "date-time" }
+      }
+    },
+    "coherence_eval": {
+      "type": "object",
+      "description": "Ω — Coherence/validation dimension (v2 only, all fields optional).",
+      "properties": {
+        "coherence_score": {
+          "type": "number",
+          "minimum": 0.0,
+          "maximum": 1.0,
+          "description": "Composite coherence score ∈ [0.0, 1.0]."
+        },
+        "validation_flags": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^VAL_[0-9]{2}$"
+          },
+          "description": "Active validation rule IDs."
+        },
+        "useful_information": {
+          "type": "boolean",
+          "description": "ICE predicate: C_l ∧ C_o ∧ Ground."
+        }
+      }
+    },
+    "ztoken": {
+      "type": "object",
+      "required": ["id", "L", "S", "Σ", "Φ"],
+      "description": "ZToken v2: eight-dimensional semantic unit (L, S, Σ, Φ, C, P, Δ, Ω). C/P/Δ/Ω are optional.",
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "L": { "$ref": "#/$defs/lexical" },
+        "S": { "$ref": "#/$defs/syntactic" },
+        "Σ": { "$ref": "#/$defs/semantic" },
+        "Φ": { "$ref": "#/$defs/logical" },
+        "C": { "$ref": "#/$defs/contextual" },
+        "P": { "$ref": "#/$defs/pragmatic" },
+        "Δ": { "$ref": "#/$defs/temporal" },
+        "Ω": { "$ref": "#/$defs/coherence_eval" },
+        "extensions": { "type": "object" }
+      }
+    },
+    "relation": {
+      "type": "object",
+      "required": ["id", "type", "category", "source", "target", "stage"],
+      "properties": {
+        "id": { "type": "string" },
+        "type": {
+          "type": "string",
+          "enum": [
+            "contains",
+            "precedes",
+            "supports",
+            "contradicts",
+            "elaborates",
+            "refers_to",
+            "cites"
+          ],
+          "description": "Relation type. 'contains' and 'precedes' are v1; the rest are v2."
+        },
+        "category": {
+          "type": "string",
+          "enum": ["structural", "logical", "semantic-link"]
+        },
+        "source": { "type": "string" },
+        "target": { "type": "string" },
+        "stage": {
+          "type": "string",
+          "enum": ["lexical", "syntactic", "semantic", "logical"]
+        },
+        "attributes": { "type": "object" },
+        "extensions": { "type": "object" }
+      }
+    },
+    "diagnostic": {
+      "type": "object",
+      "required": ["code", "severity", "message", "stage"],
+      "properties": {
+        "code": { "type": "string" },
+        "severity": {
+          "type": "string",
+          "enum": ["info", "warning", "error"]
+        },
+        "message": { "type": "string" },
+        "token_id": { "type": "string" },
+        "stage": {
+          "type": "string",
+          "enum": ["lexical", "syntactic", "semantic", "logical", "validation"]
+        }
+      }
+    },
+    "sirgraph_export": {
+      "type": "object",
+      "description": "Optional SirGraph export section in adjacency-list JSON format.",
+      "required": ["format", "nodes", "edges"],
+      "properties": {
+        "format": {
+          "type": "string",
+          "const": "stf-sir-sirgraph-v1"
+        },
+        "nodes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["id", "node_type"],
+            "properties": {
+              "id": { "type": "string" },
+              "node_type": { "type": "string" }
+            }
+          }
+        },
+        "edges": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["id", "type", "source", "target", "category"],
+            "properties": {
+              "id": { "type": "string" },
+              "type": { "type": "string" },
+              "source": { "type": "string" },
+              "target": { "type": "string" },
+              "category": { "type": "string" }
+            }
+          }
+        }
+      }
+    }
+  }
+}

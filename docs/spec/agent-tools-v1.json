@@ -1,0 +1,100 @@
+{
+  "tools": [
+    {
+      "name": "stf_sir_query",
+      "description": "Query a compiled ZMD artifact by token type, gloss pattern, semantic concept, or node depth. Returns matching ZTokens with full provenance (ztoken_id, artifact_sha256, source span).",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "artifact_path": {
+            "type": "string",
+            "description": "Path to the compiled .zmd artifact file."
+          },
+          "node_type": {
+            "type": "string",
+            "description": "Filter by syntactic node type. Common values: 'heading', 'paragraph', 'list_item', 'block_quote', 'code_block'."
+          },
+          "gloss_pattern": {
+            "type": "string",
+            "description": "Substring or regex pattern to match against Σ.gloss (the semantic summary of the token)."
+          },
+          "concept": {
+            "type": "string",
+            "description": "Filter tokens whose Σ.concepts array contains this value."
+          },
+          "max_depth": {
+            "type": "integer",
+            "description": "Maximum syntactic depth to include (0 = root only).",
+            "minimum": 0
+          },
+          "max_results": {
+            "type": "integer",
+            "description": "Maximum number of matching tokens to return.",
+            "default": 20,
+            "minimum": 1,
+            "maximum": 200
+          }
+        },
+        "required": ["artifact_path"],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "stf_sir_diff",
+      "description": "Compute a semantic diff between two compiled ZMD artifacts. Returns added, removed, and modified ZTokens and relations, suitable for understanding document evolution.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "artifact_path_a": {
+            "type": "string",
+            "description": "Path to the baseline .zmd artifact (version A / before)."
+          },
+          "artifact_path_b": {
+            "type": "string",
+            "description": "Path to the revised .zmd artifact (version B / after)."
+          },
+          "include_unchanged": {
+            "type": "boolean",
+            "description": "If true, include unchanged tokens in the diff result.",
+            "default": false
+          },
+          "diff_mode": {
+            "type": "string",
+            "enum": ["semantic", "structural", "full"],
+            "description": "Which dimensions to compare. 'semantic' compares Σ.gloss only; 'structural' compares node types and tree shape; 'full' compares all dimensions.",
+            "default": "semantic"
+          }
+        },
+        "required": ["artifact_path_a", "artifact_path_b"],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "stf_sir_retention",
+      "description": "Compute the retention score (ρ_v2) for a compiled ZMD artifact. Returns the full RetentionBaseline vector including semantic (ρ_Σ), structural (ρ_S), logical (ρ_Φ), and lexical (ρ_L) component scores.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "artifact_path": {
+            "type": "string",
+            "description": "Path to the compiled .zmd artifact file."
+          },
+          "include_breakdown": {
+            "type": "boolean",
+            "description": "If true, include per-token retention scores in addition to the aggregate vector.",
+            "default": false
+          },
+          "threshold": {
+            "type": "number",
+            "description": "Flag tokens whose retention score falls below this threshold (0.0–1.0).",
+            "minimum": 0.0,
+            "maximum": 1.0,
+            "default": 0.9
+          }
+        },
+        "required": ["artifact_path"],
+        "additionalProperties": false
+      }
+    }
+  ]
+}

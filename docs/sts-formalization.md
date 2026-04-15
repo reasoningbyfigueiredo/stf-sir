@@ -1,5 +1,12 @@
 # Semantic Token Space (STS): A Multidimensional Formalization for STF-SIR
 
+> **NAO NORMATIVO — ASPIRACIONAL.**
+> Este documento apresenta a formalizacao matematica do Semantic Token Space (STS),
+> incluindo estruturas que **nao estao implementadas** no STF-SIR v1.
+> Elementos marcados com **[aspiracional]** descrevem extensoes planejadas ou
+> posicionamento teorico, nao contratos de API nem requisitos de implementacao
+> corrente. O posicionamento normativo esta em `docs/adr/ADR-SEM-001-positioning.md`.
+
 ## 1. Introduction
 
 Traditional tokenization schemes are effective as sequence encodings, but they are not adequate as formal representations of meaning-bearing structure. Statistical subword methods preserve lexical decomposability and support efficient model training, yet they leave syntax, semantics, logical dependency, context, and pragmatic force largely implicit. As a result, downstream systems must repeatedly reconstruct higher-order structure from flattened streams.
@@ -32,10 +39,14 @@ is assumed whenever the v1 and STS formalisms are compared.
 
 ## 2. Semantic Token Space Definition
 
+**[aspiracional]** The full STS space below is the target formalization. STF-SIR v1 implements
+the first four dimensions (\(\mathcal{L}\), \(\mathcal{S}\), \(\mathcal{Sem}\), \(\mathcal{G}\));
+the remaining dimensions (\(\mathcal{C}\), \(\mathcal{P}\), \(\mathcal{D}\)) are aspirational.
+
 Let the semantic token space be the Cartesian product
 
 \[
-\mathcal{T} = \mathcal{L} \times \mathcal{S} \times \mathcal{Sem} \times \mathcal{G} \times \mathcal{C} \times \mathcal{P} \times \mathcal{D} \times \mathcal{O}.
+\mathcal{T} = \mathcal{L} \times \mathcal{S} \times \mathcal{Sem} \times \mathcal{G} \times \underbrace{\mathcal{C} \times \mathcal{P} \times \mathcal{D}}_{\text{aspiracional}} \times \mathcal{O}.
 \]
 
 For typographical clarity:
@@ -119,9 +130,9 @@ The intended meaning of each dimension is:
 | \(S\) | Syntactic structure: tree position, node type, composition metadata |
 | \(\Sigma\) | Semantic meaning: gloss, concept assignment, proposition content |
 | \(\Gamma\) | Logical relations: typed dependencies, containment, ordering, support, reference; legacy v1 alias: \(\Phi\) |
-| \(C\) | Contextual dependency: local and global conditions needed to interpret the token |
-| \(P\) | Pragmatic intent: communicative role, discourse act, speaker or author intention |
-| \(\Delta\) | Temporal or evolutionary state: versioning, provenance, revision, temporal scope |
+| \(C\) | Contextual dependency: local and global conditions needed to interpret the token | **[aspiracional]** — not materialized in v1 |
+| \(P\) | Pragmatic intent: communicative role, discourse act, speaker or author intention | **[aspiracional]** — not materialized in v1 |
+| \(\Delta\) | Temporal or evolutionary state: versioning, provenance, revision, temporal scope | **[aspiracional]** — partially approximated via provenance metadata |
 | \(\Omega\) | Global coherence and validation state, operationalized as \((\omega_{\mathrm{schema}}, \omega_{\mathrm{inv}}, \omega_{\rho})\) |
 
 The v1 ztoken model is recovered as a low-dimensional operational slice of STS by collapsing \(\Gamma\) into the current logical relation layer and treating \(C\), \(P\), and \(\Delta\) as implicit or unmaterialized.
@@ -134,7 +145,7 @@ The Cartesian product \(\mathcal{T}\) contains many combinations that are mathem
 \mathcal{M}_{\mathrm{STF}} \subset \mathcal{T}
 \]
 
-called the **valid token manifold**.
+called the **valid token manifold**. **[aspiracional]** — the full 8-dimensional manifold is the target; v1 defines constraints over \(\mathcal{L} \times \mathcal{S} \times \mathcal{Sem} \times \mathcal{G}\) only.
 
 Formally, let
 

@@ -18,6 +18,11 @@ sha2 = "0.10"
 thiserror = "1.0"
 unicode-normalization = "0.1"
 
+[features]
+# Feature-gate the RAG / embedding integration (EPIC-206).
+# Enable with: cargo build --features rag
+rag = []
+
 [dev-dependencies]
 proptest = "1.5"
 tempfile = "3.10"

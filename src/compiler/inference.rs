@@ -70,6 +70,8 @@ impl InferenceEngine for RuleBasedInferenceEngine {
                                 ..Default::default()
                             },
                             metadata: BTreeMap::new(),
+                            formula: None,
+                            semantic_dimensions: None,
                         },
                         rule_id: "modus_ponens".to_string(),
                         premises: vec![id_a.clone(), id_imp.clone()],
@@ -93,17 +95,28 @@ impl InferenceEngine for RuleBasedInferenceEngine {
 ///
 /// This is structurally correct (Theorem A9): the rule preserves the
 /// Formula homomorphism.  It does not depend on specific string literals.
+///
+/// When a `Statement` carries a pre-parsed `formula`, that is used directly;
+/// otherwise the engine falls back to `Formula::parse(&text)`.  Derived
+/// statements have their `formula` set to the conclusion `Formula`, so
+/// downstream engines never need to re-parse them.
 pub struct FormulaInferenceEngine;
+
+/// Return the formula for a statement: embedded if available, else parsed.
+#[inline]
+fn resolve_formula(stmt: &Statement) -> Option<Formula> {
+    stmt.formula.clone().or_else(|| Formula::parse(&stmt.text))
+}
 
 impl InferenceEngine for FormulaInferenceEngine {
     fn derive(&self, theory: &Theory) -> Vec<DerivedStatement> {
-        // Parse all formulas once.
+        // Resolve all formulas once — prefer embedded, fall back to parsing.
         let parsed: Vec<(String, Option<Formula>)> = theory
             .iter()
-            .map(|s| (s.id.clone(), Formula::parse(&s.text)))
+            .map(|s| (s.id.clone(), resolve_formula(s)))
             .collect();
 
-        // Collect all atom-level premises.
+        // Collect all atom-level premises (non-negation, non-implication).
         let atoms: Vec<(&str, &Formula)> = parsed
             .iter()
             .filter_map(|(id, f)| {
@@ -130,10 +143,10 @@ impl InferenceEngine for FormulaInferenceEngine {
 
         let mut derived = Vec::new();
 
-        for (id_atom, atom_formula) in &atoms {
-            for (id_imp, premise, conclusion) in &implications {
+        for &(id_atom, atom_formula) in &atoms {
+            for &(id_imp, premise, conclusion) in &implications {
                 // Modus ponens: atom matches premise → derive conclusion.
-                if *atom_formula == *premise {
+                if atom_formula == premise {
                     let conclusion_text = conclusion.to_string();
                     // Do not re-derive what is already present.
                     let already = parsed.iter().any(|(_, f)| {
@@ -152,6 +165,9 @@ impl InferenceEngine for FormulaInferenceEngine {
                                     ..Default::default()
                                 },
                                 metadata: BTreeMap::new(),
+                                // Embed the conclusion formula — no re-parsing needed downstream.
+                                formula: Some(conclusion.clone()),
+                                semantic_dimensions: None,
                             },
                             rule_id: "modus_ponens_formula".to_string(),
                             premises: vec![id_atom.to_string(), id_imp.to_string()],

@@ -1,0 +1,1076 @@
+\documentclass{article}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{geometry}
+\usepackage{hyperref}
+\usepackage{booktabs}
+\usepackage{array}
+
+\geometry{margin=1in}
+\hypersetup{
+  colorlinks=true,
+  linkcolor=blue,
+  urlcolor=blue
+}
+
+%% --- Project macros (shared with sts-paper.tex) ---------------------------
+\newcommand{\STF}{{\normalfont\textsc{STF}}}
+\newcommand{\SIR}{{\normalfont\textsc{SIR}}}
+\newcommand{\STS}{{\normalfont\textsc{STS}}}
+
+%% --- Paper-specific macros ------------------------------------------------
+\newcommand{\Univ}{\mathcal{U}}
+\newcommand{\CohTriple}{\mathrm{Coh}}
+\newcommand{\ErrTriple}{\mathrm{Err}}
+\newcommand{\ICE}{\mathrm{ICE}}
+\newcommand{\Inf}{\mathrm{Inf}}
+\newcommand{\Horizon}{\mathcal{H}}
+\newcommand{\MA}{M_A}
+\newcommand{\bottom}{\bot}
+
+%% --- Theorem environments -------------------------------------------------
+\newtheorem{theorem}{Theorem}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{definition}{Definition}
+\newtheorem{remark}{Remark}
+
+%% ---------------------------------------------------------------------------
+\title{Coherence as a Primitive:\\
+A Formal Framework for Information, Cognition, and Computational Limits}
+\author{Rogerio Figueiredo}
+\date{2026}
+
+\begin{document}
+
+\maketitle
+
+\begin{quote}
+\textbf{Não normativo.}
+Este documento apresenta contexto filosófico, hipóteses fundacionais e
+motivação teórica para o sistema \STF{}-\SIR{}.
+Ele \emph{não} define requisitos de implementação, contratos de API nem
+critérios de aceitação de testes.
+O posicionamento normativo do sistema é estabelecido em
+\texttt{docs/adr/ADR-SEM-001-positioning.md}.
+\end{quote}
+
+\begin{abstract}
+We propose a non-standard foundational hypothesis: that coherence, rather than
+information, is the primary structural property underlying observable reality.
+Motivated by an alternative interpretation of light as a static structural
+dimension rather than a propagating entity, we formalize coherence as a
+three-level relational invariant over proposition sets, distinguishing logical,
+computational, and operational coherence.  We define \emph{Coherently Executable
+Information} (CEI) as the subset of information that is both integrable into an
+agent's existing model and capable of generating actionable inference, and prove
+that information is usable if and only if it is coherently executable.  We show
+that the inferability horizon of a finite agent corresponds precisely to the
+complexity class~$\mathbf{P}$, establishing a formal correspondence between
+epistemic limits and the $\mathbf{P}$ vs $\mathbf{NP}$ boundary.  We introduce
+lexical coherence as a structure-preserving homomorphism between domains,
+operationalized through the existing retention metric~$\rho$ of the \STF{}-\SIR{}
+system, and classify lexical failures into four named error modes.  Finally, we
+present a uniform coherence-error taxonomy---anomaly, hallucination, and
+contradiction---each characterized by a three-component grounding vector.  The
+resulting framework provides formal foundations for semantic compilation systems
+such as \STF{}-\SIR{}, where coherence becomes a measurable, auditable invariant
+of every knowledge transformation.
+\end{abstract}
+
+%% ---------------------------------------------------------------------------
+\section{Introduction}
+
+Classical information theory, following Shannon~\cite{shannon1948}, defines
+information as the reduction of uncertainty in a random experiment.  This
+account is remarkably effective for quantifying transmission fidelity, but it is
+structurally agnostic: it assigns equal informational weight to messages that are
+meaningful and to messages that are incoherent, provided they are equally
+surprising.  A complementary theory of semantic information was developed by
+Carnap and Bar-Hillel~\cite{carnap1953}, but even this account does not address
+the question of whether a message can be \emph{integrated} into a receiving
+system without destroying its existing structure.
+
+We begin from a different starting point.  Rather than asking how much
+uncertainty a message reduces, we ask: under what conditions is a message usable
+at all?  Our answer is that usability requires coherence---and therefore that
+coherence is logically prior to information.
+
+This paper makes the following contributions.
+\begin{enumerate}
+  \item We introduce a foundational hypothesis ($H_0$) reinterpreting light as a
+        static structural substrate rather than a propagating phenomenon, and
+        derive from it the thesis that coherence is the primary property of the
+        observable universe (\S\ref{sec:hypothesis}).
+  \item We formalize coherence as a triple $(C_l, C_c, C_o)$ covering logical,
+        computational, and operational dimensions, and characterize the eight
+        states of the resulting coherence space (\S\ref{sec:coherence}).
+  \item We define Coherently Executable Information (CEI) and prove that
+        information is usable if and only if it is coherently executable
+        (\S\ref{sec:information}).
+  \item We establish the inference horizon of a finite agent as the set of
+        propositions provable by polynomial-time algorithms, identifying
+        epistemic limits with complexity-theoretic limits (\S\ref{sec:limits}).
+  \item We reformulate perception as a structural matching (SAT) problem, in
+        contrast to the standard signal-reception model (\S\ref{sec:perception}).
+  \item We introduce lexical coherence as a coherence-preserving map between
+        domains, operationalize it via the retention score~$\rho$ of \STF{}-\SIR{},
+        and classify four modes of lexical failure (\S\ref{sec:lexical}).
+  \item We present a uniform coherence-error taxonomy with three named classes
+        and distinct detection strategies for each (\S\ref{sec:errors}).
+  \item We connect the framework to \STF{}-\SIR{} by extending the semantic
+        token model with derived coherence and information coordinates
+        (\S\ref{sec:stfsir}).
+\end{enumerate}
+
+%% ---------------------------------------------------------------------------
+\section{Foundational Hypothesis}
+\label{sec:hypothesis}
+
+\subsection{Static Light Substrate}
+
+\begin{definition}[$H_0$: Static Light Substrate]
+Light is not a propagating entity in spacetime.  It is a structural dimension
+--- a static substrate --- over which sentient entities construct their
+representation of the observable universe.
+\end{definition}
+
+This hypothesis inverts the standard kinematic model.  Rather than asking
+\emph{how does light reach us?}, it asks \emph{what is light before it is
+perceived as motion?}  Human perception of motion is inferential: no sensory
+receptor directly captures velocity; what is captured are state differences
+across successive temporal windows.  The interpretation of light as a traveling
+entity is therefore a second-order cognitive construction, not a primary
+observation.
+
+Under $H_0$, light plays a role analogous to Euclidean space in classical
+geometry: it is the \emph{medium} within which relations are defined, not an
+entity moving within it.  This position is consonant with block-universe
+interpretations of general relativity~\cite{minkowski1908}, in which past,
+present, and future coexist as a static four-dimensional structure and
+``motion'' is an artifact of an observer's worldline.
+
+\subsection{The Primacy of Coherence}
+
+The central ontological consequence of $H_0$ is as follows.
+
+\begin{definition}[Thesis O: Coherence Precedes Information]
+Information is not an ontological primitive.  It is derived from structural
+compatibility.  Formally:
+\[
+  \text{information} \;\triangleq\; \text{that which does not break coherence.}
+\]
+\end{definition}
+
+Under Thesis~O, no informational process can occur in the absence of an
+underlying coherent structure.  Coherence is the condition of possibility for
+any signal, message, or inference.
+
+%% ---------------------------------------------------------------------------
+\section{Formalizing Coherence}
+\label{sec:coherence}
+
+Let $\Univ$ be a universe of propositions and $\mathcal{R}$ a family of
+consistency relations over $\Univ$.
+
+\subsection{Three Levels of Coherence}
+
+\begin{definition}[Logical Coherence, $C_l$]
+A set $S \subseteq \Univ$ is \emph{logically coherent} if and only if
+\[
+  C_l(S) = 1 \;\iff\; \forall\, p, q \in S,\quad \mathcal{R}(p,q) \neq \bot,
+\]
+where $\bot$ denotes irreducible incompatibility.
+\end{definition}
+
+Logical coherence is a necessary condition for any useful system.  It does not,
+however, guarantee that the system is tractable or productive.
+
+\begin{definition}[Computational Coherence, $C_c$]
+A set $S$ is \emph{computationally coherent} if its consistency can be decided
+within a bounded computational effort.  The complexity-theoretic ideal is a
+polynomial-time witness ($\exists\,\alpha \in \mathbf{P}$); in STF-SIR the
+\emph{operational definition} is a step-budget proxy:
+\[
+  C_c(S) = 1 \;\iff\; \text{the coherence check terminates within }
+  \mathit{step\_budget} \text{ steps}.
+\]
+The $\mathbf{P}$-membership framing (\S\ref{app:comp-coh}) provides theoretical
+motivation; the step-budget threshold is the normative implementation criterion.
+\end{definition}
+
+\begin{remark}[Non-normative status of the P/NP framing]
+The complexity-class characterization ($C_c = 0$ placing the problem in
+$\mathbf{NP} \setminus \mathbf{P}$) is a theoretical bound, not an
+implementation contract.  STF-SIR does \emph{not} claim to decide
+$\mathbf{P} \neq \mathbf{NP}$; it approximates tractability via an explicit
+\texttt{step\_budget} parameter.  Exceeding the budget sets $C_c = \mathit{Violated}$;
+terminating within it sets $C_c = \mathit{Satisfied}$; the distinction is
+operational, not complexity-theoretic.
+\end{remark}
+
+A set may be logically coherent yet computationally intractable within
+a given step budget.  The table below treats $C_c$ as the result of the
+step-budget check.
+
+\begin{definition}[Operational Coherence, $C_o$]
+A set $S$ is \emph{operationally coherent} if it supports productive inference:
+\[
+  C_o(S) = 1 \;\iff\; \exists\, f : S \to O \text{ with } O \neq \emptyset.
+\]
+\end{definition}
+
+Operational coherence eliminates two pathologies invisible to $C_l$ and $C_c$:
+tautological systems (logically valid, computationally verifiable, but
+informationally inert) and systems that produce no actionable consequences.
+
+\subsection{The Coherence Triple}
+
+\begin{definition}[Coherence Triple]
+The coherence of any set $S$ is fully characterized by
+\[
+  \CohTriple(S) = (C_l,\; C_c,\; C_o) \;\in\; \{0,1\}^3.
+\]
+\end{definition}
+
+The eight elements of $\{0,1\}^3$ partition the space of possible coherence
+states as follows.
+
+\begin{center}
+\renewcommand{\arraystretch}{1.25}
+\begin{tabular}{cccl}
+\toprule
+$C_l$ & $C_c$ & $C_o$ & Classification \\
+\midrule
+0 & --- & --- & \textbf{Contradictory} --- invalid at base level \\
+1 & 0   & --- & \textbf{Budget-exceeded} --- coherent but step-budget exhausted \\
+1 & 1   & 0   & \textbf{Sterile} --- coherent, verifiable, but inert \\
+1 & 1   & 1   & \textbf{Full coherence} --- the only productive state \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{remark}
+Coherence is not truth.  A system can satisfy $\CohTriple(S) = (1,1,1)$ and
+be entirely disconnected from reality.  Coherence is an \emph{internal}
+property; truth is an \emph{external} relation between model and world.
+\end{remark}
+
+%% ---------------------------------------------------------------------------
+\section{Information as a Derived Concept}
+\label{sec:information}
+
+\subsection{Three Layers of Information}
+
+\begin{definition}[Shannon Information, $I_1$]
+For a discrete random variable $X$ with distribution $P$,
+\[
+  H(X) = -\sum_{x} P(x) \log_2 P(x).
+\]
+\end{definition}
+
+Shannon entropy captures surprise and uncertainty but is blind to meaning.
+
+\begin{definition}[Semantic Information, $I_2$ {\normalfont\cite{carnap1953}}]
+The semantic information of a proposition $p$ in a possibility space
+$\mathcal{W}$ is
+\[
+  \Inf(p) = -\log_2 P(\mathcal{W}_p),
+\]
+where $\mathcal{W}_p \subseteq \mathcal{W}$ is the set of worlds in which $p$
+is true.
+\end{definition}
+
+Tautologies carry zero semantic information; contradictions carry maximal
+semantic information but zero truth value.  Useful semantic information exists
+only at the non-trivial intersection of coherence and truth.
+
+\begin{definition}[Coherently Executable Information, $I_3$ / CEI]
+\label{def:cei}
+A message $m$ carries \emph{coherently executable information} for an agent $A$
+with model $\MA$ if and only if
+\[
+  \ICE(m, A) = 1 \;\iff\;
+  \begin{cases}
+    \MA \cup \{m\} \not\models \bot
+      & \quad \textbf{(C1: integrable)} \\
+    \exists\, f : \MA \cup \{m\} \to O,\; O \neq \emptyset
+      & \quad \textbf{(C2: executable)}
+  \end{cases}
+\]
+\end{definition}
+
+Condition C1 ensures the message does not destroy the existing model.
+Condition C2 ensures the augmented model can derive at least one new
+consequence.
+
+\begin{theorem}[Information Usability Constraint]
+\label{thm:usability}
+A message is usable by agent $A$ if and only if it is coherently executable,
+i.e., $\ICE(m,A) = 1$.
+\end{theorem}
+
+\begin{proof}
+($\Rightarrow$) If $\MA \cup \{m\} \models \bot$, the model is contradicted and
+no inference is valid.  If no $f$ exists such that $\MA \cup \{m\} \to O$ with
+$O \neq \emptyset$, the message produces no actionable consequence.  In either
+case, the message is unusable.
+
+($\Leftarrow$) If both C1 and C2 hold, the message integrates without
+contradiction and generates at least one new consequence.  It is therefore
+usable.~$\square$
+\end{proof}
+
+\begin{corollary}
+Any message satisfying C1 but not C2 is \emph{coherent noise}: it does not
+invalidate the model but contributes nothing.  Any message satisfying C2 but not
+C1 is a \emph{hallucination trigger}: it produces outputs but corrupts the base
+model.
+\end{corollary}
+
+%% ---------------------------------------------------------------------------
+\section{Cognitive and Computational Limits}
+\label{sec:limits}
+
+\subsection{The Inference Horizon}
+
+Let $A$ be an agent with model $\MA$ and observation set $O_A$.
+
+\begin{definition}[Inference Horizon]
+The \emph{inference horizon} of agent $A$ is
+\[
+  \Horizon_A = \bigl\{\, p \in \Univ \;\mid\;
+    \exists\, \alpha \in \mathbf{P},\;\; \alpha(\MA, O_A) \vdash p \,\bigr\}.
+\]
+\end{definition}
+
+Everything outside $\Horizon_A$ is inferentially inaccessible to $A$, regardless
+of computational resources applied.
+
+\begin{theorem}[Computational Epistemic Boundary]
+\label{thm:horizon}
+The inferible knowledge of a finite agent is bounded by $\mathbf{P}$: the agent
+can know exactly those propositions derivable by polynomial-time algorithms from
+its model and observations.
+\end{theorem}
+
+\begin{proof}
+By definition of $\Horizon_A$, any $p \in \Horizon_A$ is derived by some
+$\alpha \in \mathbf{P}$.  For $p \notin \Horizon_A$, no polynomial-time
+algorithm suffices; the agent may verify a proposed proof in $\mathbf{NP}$ but
+cannot construct one efficiently.~$\square$
+\end{proof}
+
+\subsection{Three Epistemic Regimes}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.25}
+\begin{tabular}{ll}
+\toprule
+Regime & Epistemic status \\
+\midrule
+$\Pi \in \mathbf{P}$ &
+  Computable and verifiable: fully within the agent's horizon \\
+$\Pi \in \mathbf{NP} \setminus \mathbf{P}$ &
+  Verifiable but not constructible: horizon of verification \\
+$\Pi \notin \mathbf{NP}$ &
+  Neither constructible nor verifiable: computationally unknowable \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{corollary}[Coherence as Polynomial Witness]
+Checking whether $\MA \models o$ for a single observation $o$ is polynomial in
+$|\MA|$ for well-structured models.  Coherence verification is therefore within
+$\mathbf{P}$, which explains the empirical preference of sentient agents for
+coherent representations: coherence is the only regime in which verification is
+computationally accessible.
+\end{corollary}
+
+%% ---------------------------------------------------------------------------
+\section{Perception as Structural Matching}
+\label{sec:perception}
+
+The standard model of perception is:
+\[
+  \text{input} \;\xrightarrow{\;\text{processing}\;}\; \text{representation.}
+\]
+Under $H_0$ and Thesis~O, this model is replaced by a structural matching
+problem.
+
+\begin{definition}[Perception as SAT]
+Perceiving for agent $A$ is defined as
+\[
+  \mathrm{Perceive}(A)
+  = \operatorname*{arg\,max}_{S \subseteq \Univ} \CohTriple(S, \MA),
+\]
+where $\CohTriple(S, \MA)$ measures structural compatibility of $S$ with the
+agent's model.
+\end{definition}
+
+This reformulation identifies perception with a constraint-satisfaction problem
+(SAT) over the coherent sub-structures of the universe.  The agent does not
+\emph{receive} a signal; it \emph{finds} the subset of $\Univ$ most compatible
+with its current model.
+
+\begin{remark}
+This has a direct implication for semantic systems: document querying is not
+retrieval but matching.  A query result is semantically valid if and only if
+$\CohTriple(\text{result}) = (1,1,1)$.
+\end{remark}
+
+%% ---------------------------------------------------------------------------
+\section{Lexical Coherence}
+\label{sec:lexical}
+
+\subsection{Definitions}
+
+\begin{definition}[Structural Lexical Coherence, LC1]
+A mapping $\phi : \mathcal{D}_1 \to \mathcal{D}_2$ between domains is
+\emph{lexically coherent} if it preserves the coherence triple:
+\[
+  \forall S \subseteq \mathcal{D}_1,\quad
+  \CohTriple(S) = (1,1,1)
+  \;\Rightarrow\;
+  \CohTriple(\phi(S)) = (1,1,1).
+\]
+A homomorphism satisfying this condition is called a \emph{coherence map}.
+\end{definition}
+
+\begin{definition}[Operational Lexical Coherence, LC2]
+A coherence map $\phi$ is \emph{operationally valid} if it preserves the
+retention score above a domain-specific threshold $\theta$:
+\[
+  \phi \text{ is valid} \;\iff\; \rho\bigl(\phi(S)\bigr) \geq \theta,
+\]
+where $\rho$ is the retention metric of \STF{}-\SIR{}.
+\end{definition}
+
+LC2 operationalizes LC1 for the \STF{}-\SIR{} pipeline: the existing retention
+score $\rho$ is the computational proxy for coherence preservation under
+domain transfer.
+
+\subsection{Lexical Failure Taxonomy}
+
+When $\phi$ fails to satisfy LC1 or LC2, the failure is classified into four
+named modes.
+
+\begin{center}
+\renewcommand{\arraystretch}{1.25}
+\begin{tabular}{llll}
+\toprule
+Tag & Name & Description & Error triple \\
+\midrule
+\texttt{LEX\_COLLAPSE} & Collapse &
+  Source relations destroyed & $(0,{-},{-})$ \\
+\texttt{LEX\_DRIFT} & Drift &
+  Meaning deviates without detectable contradiction & $(1,0,0)$ \\
+\texttt{LEX\_SPLIT} & Branching &
+  One proposition maps to multiple interpretations & $(1,1,0)$ \\
+\texttt{LEX\_MASK} & Mask &
+  Mapping appears coherent but conceals incoherence & $(1,0,0)$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\texttt{LEX\_MASK} is the lexical analogue of hallucination: it is superficially
+valid but structurally empty.
+
+%% ---------------------------------------------------------------------------
+\section{Coherence Error Taxonomy}
+\label{sec:errors}
+
+\subsection{Uniform Error Representation}
+
+\begin{definition}[Error Triple]
+The coherence error state of an item $x$ is the triple
+\[
+  \ErrTriple(x) = (\mathrm{Coh}_l,\; \mathrm{Coh}_g,\; \mathrm{Ground})
+  \;\in\; \{0,1\}^3,
+\]
+where $\mathrm{Coh}_l$ is local coherence, $\mathrm{Coh}_g$ is global coherence,
+and $\mathrm{Ground}$ is referential grounding.
+\end{definition}
+
+\subsection{Anomaly}
+
+\begin{definition}[Anomaly, E1]
+An item $x$ is an \emph{anomaly} with respect to domain $\mathcal{D}$ if
+\[
+  \mathrm{Anomaly}(x, \mathcal{D}) \;\iff\; P_{\mathcal{D}}(x) < \epsilon_{\mathcal{D}}.
+\]
+Error triple: $(1, 1, 1)$.
+\end{definition}
+
+An anomaly is statistically improbable but structurally valid.  It is recoverable
+via Bayesian prior update.  Crucially, anomaly and a correct item share the same
+error triple $(1,1,1)$; the distinction is probabilistic, not structural.
+
+\subsection{Hallucination}
+
+\begin{definition}[Hallucination, E2]
+\label{def:hallucination}
+An item $x$ is a \emph{hallucination} if
+\[
+  \mathrm{Hallucination}(x) \;\iff\;
+  \mathrm{Coh}_l(x) = 1 \;\wedge\; \mathrm{Ground}(x, \mathcal{W}) = 0.
+\]
+Error triple: $(1, 0, 0)$.
+\end{definition}
+
+\begin{theorem}[Hallucination as Local Coherence Without Global Grounding]
+\label{thm:hallucination}
+A hallucination passes all internal coherence checks and is therefore
+indistinguishable from a valid output by any purely logical verifier.  Detection
+requires an external grounding mechanism.
+\end{theorem}
+
+\begin{proof}
+By Definition~\ref{def:hallucination}, $\mathrm{Coh}_l(x) = 1$, so no internal
+consistency check raises a flag.  The grounding failure $\mathrm{Ground}(x,
+\mathcal{W}) = 0$ is only observable via comparison with an external referent.
+No algorithm operating solely on $x$ can determine its grounding status.~$\square$
+\end{proof}
+
+Hallucination is constitutively distinct from lying: there is no intent; the
+system operates outside its validity domain.
+
+\subsection{Contradiction}
+
+\begin{definition}[Contradiction, E3]
+A set of propositions $S$ is \emph{contradictory} if
+\[
+  S \models \bot.
+\]
+Error triple: $(0, -, -)$.
+\end{definition}
+
+Contradiction fails at the local level, making global and grounding dimensions
+irrelevant.  Unlike anomaly and hallucination, contradiction is formally
+detectable without external data.
+
+\subsection{Error Space Summary}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.25}
+\begin{tabular}{lcccc}
+\toprule
+Error type & $\mathrm{Coh}_l$ & $\mathrm{Coh}_g$ & Ground
+           & Detection strategy \\
+\midrule
+Anomaly      & 1 & 1 & 1 & Corpus statistics over domain model \\
+Hallucination & 1 & 0 & 0 & $\Delta$-tracking + external grounding \\
+Contradiction & 0 & --- & --- & Formal verification / SAT \\
+Valid        & 1 & 1 & 1 & --- \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+%% ---------------------------------------------------------------------------
+\section{Connection to STF-SIR}
+\label{sec:stfsir}
+
+\subsection{Evolved Token Model}
+
+The \STF{}-\SIR{} v1 semantic token is
+\[
+  t = (L, S, \Sigma, \Gamma, C, P, \Delta, \Omega).
+\]
+This paper proposes two derived coordinates to be materialized during compilation:
+\[
+  t' = (L, S, \Sigma, \Gamma, C, P, \Delta, \Omega, \kappa, \iota),
+\]
+where
+\[
+  \kappa(t) = (C_l, C_c, C_o) \;\in\; \{0,1\}^3
+\]
+is the \emph{coherence coordinate}, and
+\[
+  \iota(t) = \bigl(H(t),\; \Inf(t),\; \ICE(t)\bigr)
+  \;\in\; \mathbb{R}_{\geq 0}^2 \times \{0,1\}
+\]
+is the \emph{information coordinate}.
+
+Both $\kappa$ and $\iota$ are \emph{derived} fields, never compiler inputs.
+They are evaluated during the logical and semantic passes respectively, and
+are available to the audit pipeline, diff engine, and retention benchmark.
+
+A token satisfying $\kappa = (1,1,1)$ and $\ICE(t) = 1$ is a \emph{fully
+coherent and productive semantic unit}.
+
+\subsection{Hallucination in the Compilation Pipeline}
+
+By Theorem~\ref{thm:hallucination}, a hallucinated token $t$ satisfies
+$\omega_{\mathrm{inv}} = 1$ and $\omega_\rho \approx 1$ but
+$\mathrm{Ground}(t, \mathcal{A}_{\mathrm{source}}) = 0$.  Detection therefore
+requires provenance tracking in the $\Delta$ dimension.  Internal coherence
+metrics are insufficient; a $\Delta$-tracking mechanism must be introduced in
+the compilation pipeline to flag hallucinated tokens with the
+\texttt{HALLUCINATION} tag.
+
+\subsection{Query Engine Implication}
+
+Under the perception-as-matching model of Section~\ref{sec:perception}, the
+\STF{}-\SIR{} semantic query engine (EPIC-203) is a coherence-constrained SAT
+solver over the SirGraph.  A query result is semantically valid if and only if
+its coherence triple is $(1,1,1)$.
+
+%% ---------------------------------------------------------------------------
+\section{Implications}
+\label{sec:implications}
+
+\paragraph{For AI systems.}
+Failures in large language models and generative systems can be reclassified as
+coherence-triple mismatches.  Hallucinations (\S\ref{sec:errors}) are precisely
+$(1,0,0)$ events: locally fluent outputs with zero grounding.  Grounding
+mechanisms are, formally, devices for enforcing $\mathrm{Ground} = 1$.
+
+\paragraph{For epistemology.}
+Knowledge is bounded inference: an agent knows exactly what lies within its
+inference horizon $\Horizon_A$.  Truth and coherence are orthogonal: a system
+can be $(1,1,1)$ and false, or $(0,-,-)$ and accidentally true.
+
+\paragraph{For systems design.}
+A semantic compilation system is not a processor of tokens---it is a
+\emph{coherence compiler}: a system whose primary invariant is the preservation
+of the coherence triple across every transformation.  The retention score
+$\rho \geq \theta$ is the operational expression of this invariant.
+
+%% ---------------------------------------------------------------------------
+\section{Conclusion}
+
+We have shown that coherence, formalized as the triple $(C_l, C_c, C_o)$, is
+logically prior to information and provides a uniform foundation for
+understanding perception, inference, knowledge transfer, and error classification.
+The key results are:
+
+\begin{enumerate}
+  \item Coherence is a primitive; information is derived (Thesis~O).
+  \item Information is usable if and only if it is coherently executable
+        (Theorem~\ref{thm:usability}).
+  \item The inferential horizon of a finite agent coincides with $\mathbf{P}$
+        (Theorem~\ref{thm:horizon}).
+  \item Hallucination is local coherence without global grounding
+        (Theorem~\ref{thm:hallucination}), and is undetectable by purely internal
+        means.
+  \item Lexical coherence generalizes the \STF{}-\SIR{} retention score $\rho$
+        to cross-domain transfer.
+\end{enumerate}
+
+These results provide a formal foundation for the ongoing development of the
+\STF{}-\SIR{} v2 platform, in which coherence is the central auditable invariant
+of all semantic transformations.
+
+%% ===========================================================================
+\appendix
+
+\section{Formal Foundations of Coherence and Information}
+\label{app:foundations}
+
+This appendix provides the logical and model-theoretic underpinnings for the
+definitions and theorems in the main text.  The presentation follows the
+tradition of Tarski~\cite{tarski1936} for semantic consequence and draws on
+standard results in proof theory and computational complexity.
+
+%% ---------------------------------------------------------------------------
+\subsection{Preliminaries}
+\label{app:prelim}
+
+\paragraph{Language and structures.}
+Let $\mathcal{L}$ be a first-order language, $\Univ$ the set of all
+well-formed formulas (wffs) of $\mathcal{L}$, $\vdash$ the syntactic
+derivability relation, and $\models$ the semantic consequence relation in the
+sense of Tarski~\cite{tarski1936}.
+
+\paragraph{Models.}
+A model is a pair $\mathfrak{M} = (D, I)$ where $D$ is a non-empty domain and
+$I$ an interpretation function.  We write $\mathfrak{M} \models \varphi$ when
+$\mathfrak{M}$ satisfies $\varphi$.
+
+\begin{definition}[Consistency, A1]
+A set $S \subseteq \Univ$ is \emph{consistent} if and only if $S \nvdash \bot$.
+\end{definition}
+
+%% ---------------------------------------------------------------------------
+\subsection{Coherence as a Generalization of Consistency}
+\label{app:coherence-gen}
+
+\paragraph{Logical coherence (A2).}
+We identify logical coherence with syntactic consistency:
+\[
+  C_l(S) = 1 \;\iff\; S \nvdash \bot.
+\]
+
+\begin{theorem}[Compactness, A1]
+\label{thm:compactness}
+If $\mathcal{L}$ is a first-order language, then $S$ is consistent if and only
+if every finite subset of $S$ is consistent:
+\[
+  S \nvdash \bot \;\iff\;
+  \forall S_0 \subseteq S,\; |S_0| < \infty,\; S_0 \nvdash \bot.
+\]
+\end{theorem}
+
+\begin{proof}
+This is the classical Compactness Theorem for first-order logic, a consequence
+of the completeness theorem proved by G\"{o}del~\cite{godel1930}.~$\square$
+\end{proof}
+
+\paragraph{Consequence for computation.}
+Theorem~\ref{thm:compactness} is foundational for tractable coherence checking:
+global coherence over a potentially infinite set can be reduced to checking
+finite subsets, which makes local verification strategies sound.
+
+%% ---------------------------------------------------------------------------
+\subsection{Computational Coherence}
+\label{app:comp-coh}
+
+Define the coherence decision problem:
+\[
+  \mathrm{COH} = \bigl\{\, S \subseteq \Univ \mid S \nvdash \bot \,\bigr\}.
+\]
+
+\begin{theorem}[Complexity of Coherence, A2]
+\label{thm:coh-conp}
+For propositional $\mathcal{L}$, $\mathrm{COH} \in \mathrm{co\text{-}NP}$.
+\end{theorem}
+
+\begin{proof}
+The complement $\overline{\mathrm{COH}}$ is the set of inconsistent
+propositional sets.  Verifying inconsistency reduces to satisfiability of
+$\neg\bigwedge S$: a nondeterministic algorithm guesses an assignment and
+checks it in polynomial time.  Hence $\overline{\mathrm{COH}} \in \mathbf{NP}$
+by the NP-completeness of SAT~\cite{cook1971}, and therefore
+$\mathrm{COH} \in \mathrm{co\text{-}NP}$.~$\square$
+\end{proof}
+
+\begin{definition}[Computational Coherence — Theoretical Ideal, A3]
+\label{def:compcoh}
+\emph{(Theoretical motivation — non-normative for STF-SIR implementation.)}
+$C_c(S) = 1$ if and only if there exists an algorithm $\alpha \in \mathbf{P}$
+that verifies $S \nvdash \bot$.  In general propositional logic,
+$C_c(S) = 1$ only for syntactically restricted fragments where coherence
+checking is known to be in $\mathbf{P}$ (e.g., Horn clauses, 2-SAT).
+\end{definition}
+
+\begin{definition}[Computational Coherence — STF-SIR Operational Definition, A3-impl]
+\label{def:compcoh-impl}
+In STF-SIR, $C_c$ is approximated by a step-budget check:
+\[
+  C_c^{\mathit{impl}}(S,\, B) =
+  \begin{cases}
+    \mathit{Satisfied} & \text{if the coherence check uses } \leq B \text{ steps,} \\
+    \mathit{Violated}  & \text{if it exhausts } B \text{ steps.}
+  \end{cases}
+\]
+The default budget is $B = \mathtt{RECOMMENDED\_STEP\_BUDGET} = 1\,000\,000$.
+This is a proxy for tractability; it makes no claim about $\mathbf{P}$ vs.\
+$\mathbf{NP}$ membership of the problem instance.
+\end{definition}
+
+\begin{remark}
+The distinction between $C_l$ and $C_c$ is not merely theoretical.  A set may
+be logically coherent ($C_l = 1$) yet exhaust the step budget ($C_c = 0$) for
+large or adversarially structured inputs.  The complexity-class analysis of
+Theorem~\ref{thm:coh-conp} motivates \emph{why} a budget matters; it does not
+define the operational behaviour of STF-SIR.
+\end{remark}
+
+%% ---------------------------------------------------------------------------
+\subsection{Operational Coherence}
+\label{app:op-coh}
+
+Let $\mathrm{Cn}(S) = \{p \in \Univ \mid S \vdash p\}$ denote the deductive
+closure of $S$.
+
+\begin{definition}[Operational Coherence, A4]
+$C_o(S) = 1$ if and only if there exists $p \in \Univ$ such that
+$S \vdash p$ and $p \notin \mathrm{Cn}(\emptyset)$, i.e., $S$ derives at
+least one non-tautological consequence.
+\end{definition}
+
+\begin{theorem}[Operational Coherence via Models, A3]
+\label{thm:op-sat}
+If $S$ is finite and consistent, then $C_o(S) = 1$ if and only if there exists
+a model $\mathfrak{M}$ such that $\mathfrak{M} \models S$.
+\end{theorem}
+
+\begin{proof}
+($\Rightarrow$) Any non-tautological consequence $p$ derived from $S$ is true
+in every model of $S$; hence $S$ has a model.
+
+($\Leftarrow$) By G\"{o}del's Completeness Theorem~\cite{godel1930}: if $S$
+has a model, then $S$ is consistent, and consistency of a non-trivial set
+implies the existence of non-tautological derivable consequences.~$\square$
+\end{proof}
+
+%% ---------------------------------------------------------------------------
+\subsection{Coherently Executable Information: Formal Proofs}
+\label{app:cei-proofs}
+
+Let an agent be a pair $A = (\MA, F_A)$ where $\MA \subseteq \Univ$ is its
+theory and $F_A$ is its inference system.  The CEI definition from the main
+text (Definition~\ref{def:cei}) is:
+\[
+  \ICE(m, A) = 1 \;\iff\;
+  \begin{cases}
+    \MA \cup \{m\} \nvdash \bot & \text{(C1)} \\
+    \exists\, p \notin \mathrm{Cn}(\MA) : \MA \cup \{m\} \vdash p & \text{(C2)}
+  \end{cases}
+\]
+
+\begin{theorem}[Necessity of Coherence, A4]
+\label{thm:explosion}
+If $\MA \cup \{m\} \vdash \bot$, then $\MA \cup \{m\} \vdash p$ for every
+$p \in \Univ$.
+\end{theorem}
+
+\begin{proof}
+This is the principle of explosion (\emph{ex contradictione quodlibet}):
+$\bot \vdash p$ is a theorem of any standard logical calculus.~$\square$
+\end{proof}
+
+\paragraph{Consequence.}
+By Theorem~\ref{thm:explosion}, an incoherent message does not merely fail to
+add information---it makes every proposition derivable, destroying the
+discriminative power of the agent's model.  This is why C1 is not merely
+desirable but necessary.
+
+\begin{theorem}[Inutility of Non-Execution, A5]
+\label{thm:inutility}
+If $\MA \cup \{m\} \nvdash p$ for every $p \notin \mathrm{Cn}(\MA)$, then $m$
+adds no useful information to $A$.
+\end{theorem}
+
+\begin{proof}
+If no new non-tautological consequence follows from $\MA \cup \{m\}$, then
+$\mathrm{Cn}(\MA \cup \{m\}) \subseteq \mathrm{Cn}(\MA)$.  The message does
+not expand the agent's knowledge; it is informationally inert.~$\square$
+\end{proof}
+
+%% ---------------------------------------------------------------------------
+\subsection{Computational Limits of Cognition: Proofs}
+\label{app:limits-proofs}
+
+\begin{theorem}[Inference Horizon Bound, A6]
+\label{thm:ha-p}
+$\Horizon_A \subseteq \mathbf{P}$.
+\end{theorem}
+
+\begin{proof}
+By definition, $p \in \Horizon_A$ requires the existence of $\alpha \in
+\mathbf{P}$ such that $\alpha(\MA, O_A) \vdash p$.  Therefore every element
+of $\Horizon_A$ is witnessed by a polynomial-time derivation.~$\square$
+\end{proof}
+
+\begin{theorem}[NP Barrier, A7]
+\label{thm:np-barrier}
+If $\mathbf{P} \neq \mathbf{NP}$, then there exist propositions $p$ such that
+$p \notin \Horizon_A$ for every polynomial-time agent $A$.
+\end{theorem}
+
+\begin{proof}
+Assuming $\mathbf{P} \neq \mathbf{NP}$, there exist decision problems in
+$\mathbf{NP} \setminus \mathbf{P}$.  Any proposition whose derivation requires
+solving such a problem cannot be produced by any $\alpha \in \mathbf{P}$.  By
+definition of $\Horizon_A$, such propositions lie outside every agent's
+inference horizon.~$\square$
+\end{proof}
+
+%% ---------------------------------------------------------------------------
+\subsection{Perception as Satisfiability: Complexity}
+\label{app:sat-complexity}
+
+\begin{definition}[Perception as SAT, A8]
+For agent $A$ with model $\MA$ and observation set $O$:
+\[
+  \mathrm{Perceive}(A, O) = \mathrm{SAT}(\MA \cup O).
+\]
+\end{definition}
+
+\begin{theorem}[NP-Completeness of Perception, A8]
+\label{thm:perception-np}
+In the propositional case, $\mathrm{Perceive}(A, O)$ is NP-complete.
+\end{theorem}
+
+\begin{proof}
+Membership in NP: a nondeterministic algorithm guesses a satisfying assignment
+and verifies it in polynomial time.  NP-hardness: propositional SAT reduces to
+$\mathrm{Perceive}$ by setting $\MA = \emptyset$ and $O$ to the formula in
+question~\cite{cook1971}.~$\square$
+\end{proof}
+
+\begin{remark}
+Theorem~\ref{thm:perception-np} formalizes the cognitive cost of alignment:
+perception, as structural matching, is computationally harder than recognition
+(polynomial) but tractable in restricted fragments.  Natural cognitive systems
+likely exploit domain-specific structure to reduce perception to tractable
+subcases.
+\end{remark}
+
+%% ---------------------------------------------------------------------------
+\subsection{Lexical Coherence: Homomorphism Property}
+\label{app:lexical-proofs}
+
+\begin{theorem}[Homomorphism Preserves Coherence, A9]
+\label{thm:hom-coherence}
+If $\phi : \mathcal{L}_1 \to \mathcal{L}_2$ is a logical homomorphism
+(preserving the inference rules of $\mathcal{L}_1$), then:
+\[
+  S \vdash p \;\Rightarrow\; \phi(S) \vdash \phi(p).
+\]
+Consequently, if $S$ is consistent in $\mathcal{L}_1$, then $\phi(S)$ is
+consistent in $\mathcal{L}_2$.
+\end{theorem}
+
+\begin{proof}
+Let $S \vdash p$ via a derivation $d = (f_1, \ldots, f_n)$ where $f_n = p$ and
+each $f_i$ is either in $S$ or follows from earlier steps by a rule of
+$\mathcal{L}_1$.  Since $\phi$ preserves the inference rules, applying $\phi$
+pointwise to $d$ yields a valid derivation of $\phi(p)$ from $\phi(S)$ in
+$\mathcal{L}_2$.  Taking $p = \bot$ contrapositively: if $\phi(S) \vdash \bot$,
+then $S \vdash \bot$, so $C_l(S) = 0$.  The contrapositive of this is LC1.~$\square$
+\end{proof}
+
+%% ---------------------------------------------------------------------------
+\subsection{Error Taxonomy: Formal Characterizations}
+\label{app:error-proofs}
+
+\begin{definition}[Hallucination via Satisfiability, A9]
+An item $x$ over theory $S$ is a hallucination if $C_l(S) = 1$ (locally
+consistent) and there is no model $\mathfrak{M}$ such that $\mathfrak{M}
+\models S \cup \{\mathrm{context}(x)\}$ where $\mathrm{context}(x)$ includes
+the grounding conditions for $x$.
+\end{definition}
+
+\begin{theorem}[Hallucination Implies Global Non-Satisfiability, A10]
+\label{thm:hall-unsat}
+A hallucination is locally coherent but globally unsatisfiable: the source
+context $\mathcal{A}$ provides no model for the grounding conditions of $x$.
+\end{theorem}
+
+\begin{proof}
+By definition, $C_l(x) = 1$ means $x$ does not produce a contradiction in
+isolation.  The grounding failure $\mathrm{Ground}(x, \mathcal{W}) = 0$
+means $\neg\exists\, \mathfrak{M} \in \mathcal{W} : \mathfrak{M} \models x$.
+Therefore $x$ is satisfiable as a formula but has no model in the intended
+world $\mathcal{W}$: local coherence and global non-satisfiability coexist.~$\square$
+\end{proof}
+
+%% ---------------------------------------------------------------------------
+\subsection{Central Theorem}
+\label{app:central}
+
+We now state and prove the main result of the framework, consolidating
+Theorems~\ref{thm:explosion}, \ref{thm:inutility}, and the definition of CEI.
+
+\begin{theorem}[Primacy of Coherence: Central Result]
+\label{thm:central}
+Information is useful if and only if it is coherent and executable:
+\[
+  m \text{ is useful for } A
+  \;\iff\;
+  \ICE(m, A) = 1
+  \;\iff\;
+  C_l(\MA \cup \{m\}) = 1 \;\wedge\; C_o(\MA \cup \{m\}) = 1.
+\]
+\end{theorem}
+
+\begin{proof}
+($\Rightarrow$) Suppose $m$ is useful, i.e., it expands $A$'s knowledge
+without destroying it.  If $\MA \cup \{m\} \vdash \bot$, then by
+Theorem~\ref{thm:explosion} every proposition is derivable, and no information
+is gained selectively---a contradiction with usefulness.  If $C_o = 0$, then
+no new non-tautological consequence follows, again contradicting usefulness.
+Therefore $C_l = 1$ and $C_o = 1$.
+
+($\Leftarrow$) If $C_l(\MA \cup \{m\}) = 1$, the model is not destroyed.  If
+$C_o(\MA \cup \{m\}) = 1$, at least one new non-tautological consequence
+follows.  Both conditions jointly constitute the definition of usefulness.~$\square$
+\end{proof}
+
+\paragraph{Summary.}
+The central theorem establishes the full hierarchy:
+\begin{itemize}
+  \item Coherence ($C_l$) is the necessary condition: without it, information
+        is destructive.
+  \item Executability ($C_o$) is the sufficient productive condition: without
+        it, information is inert.
+  \item Truth is orthogonal: a useful message can be false (it expands the
+        model coherently but incorrectly), and a true message can be useless
+        (tautological).
+\end{itemize}
+This completes the formal grounding of Thesis~O: coherence is logically and
+computationally prior to information.
+
+%% ---------------------------------------------------------------------------
+\begin{thebibliography}{9}
+
+\bibitem{shannon1948}
+  C.~E. Shannon,
+  ``A mathematical theory of communication,''
+  \textit{Bell System Technical Journal}, vol.~27, pp.~379--423 and 623--656,
+  1948.
+
+\bibitem{carnap1953}
+  R.~Carnap and Y.~Bar-Hillel,
+  ``An outline of a theory of semantic information,''
+  Technical Report No.~247, MIT Research Laboratory of Electronics, 1952.
+  Published as: \textit{Language and Information}, Addison-Wesley, 1964.
+
+\bibitem{minkowski1908}
+  H.~Minkowski,
+  ``Raum und Zeit,''
+  Address delivered at the 80th Assembly of German Natural Scientists and
+  Physicians, Cologne, 1908.
+
+\bibitem{cherniak1986}
+  C.~Cherniak,
+  \textit{Minimal Rationality}.
+  MIT Press, Cambridge, MA, 1986.
+
+\bibitem{ji2023}
+  Z.~Ji et al.,
+  ``Survey of hallucination in natural language generation,''
+  \textit{ACM Computing Surveys}, vol.~55, no.~12, pp.~1--38, 2023.
+
+\bibitem{figueiredo2026sts}
+  R.~Figueiredo,
+  ``Semantic Token Space (\STS{}): A Multidimensional Formalization for
+  \STF{}-\SIR{},''
+  Technical report, 2026.
+  Available: \texttt{docs/sts-formalization.md}.
+
+\bibitem{figueiredo2026spec}
+  R.~Figueiredo,
+  ``\STF{} Core Semantics Specification,''
+  Technical report, 2026.
+  Available: \texttt{docs/spec/SPEC-STF-CORE-SEMANTICS.md}.
+
+\bibitem{tarski1936}
+  A.~Tarski,
+  ``\"{U}ber den Begriff der logischen Folgerung,''
+  \textit{Actes du Congr\`{e}s International de Philosophie Scientifique},
+  vol.~7, pp.~1--11, 1936.
+  English translation: ``On the concept of logical consequence,''
+  in \textit{Logic, Semantics, Metamathematics}, Oxford University Press, 1956.
+
+\bibitem{godel1930}
+  K.~G\"{o}del,
+  ``Die Vollst\"{a}ndigkeit der Axiome des logischen Funktionenkalk\"{u}ls,''
+  \textit{Monatshefte f\"{u}r Mathematik und Physik}, vol.~37, pp.~349--360,
+  1930.
+  English translation: ``The completeness of the axioms of the functional
+  calculus of logic,'' in \textit{From Frege to G\"{o}del}, Harvard University
+  Press, 1967.
+
+\bibitem{cook1971}
+  S.~A. Cook,
+  ``The complexity of theorem-proving procedures,''
+  in \textit{Proceedings of the 3rd Annual ACM Symposium on Theory of
+  Computing (STOC)}, pp.~151--158, 1971.
+
+\end{thebibliography}
+
+\end{document}

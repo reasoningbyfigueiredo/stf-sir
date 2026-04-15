@@ -1,0 +1,329 @@
+# Invariant → Test Mapping
+# STF-SIR v2 | version: 2.0.0-alpha | generated: 2026-04-12
+#
+# Every invariant defined in the contract model MUST have at least one test.
+# The audit pipeline (Stage-2) reads this file and blocks PRs for 'missing' coverage.
+#
+# coverage values:
+#   full    – automated test covers the invariant completely
+#   partial – automated test covers a subset; manual review supplements
+#   missing – no test yet (blocks PR if severity = required)
+
+invariants:
+
+  # ─── EPIC-201: Spec v2 ────────────────────────────────────────────────
+  - id: INV-201-1
+    description: "v1 rules VAL_01–VAL_18 preserved verbatim or superseded"
+    severity: required
+    tests:
+      - script: scripts/audit/lint-spec.sh spec/stf-sir-spec-v2.md
+      - cargo: "cargo test conformance -- --test-thread=1"
+    coverage: missing  # until spec v2 is written
+
+  - id: INV-201-2
+    description: "ZToken v2 is strict superset of v1 field set"
+    severity: required
+    tests:
+      - script: scripts/audit/validate-migration-v1-v2.sh tests/golden/
+    coverage: missing
+
+  - id: INV-201-3
+    description: "Enricher trait satisfies monotonicity"
+    severity: required
+    tests:
+      - cargo: "PROPTEST_CASES=512 cargo test enricher_monotonicity"
+        file: tests/enricher_monotonicity.rs
+    coverage: missing
+
+  - id: INV-201-4
+    description: "New relation types have exactly one category"
+    severity: required
+    tests:
+      - cargo: "cargo test new_relation_category"
+        file: tests/compile_v2.rs
+    coverage: missing
+
+  # ─── EPIC-202: ZMD Canonical Format v2 ──────────────────────────────
+  - id: INV-202-1
+    description: "All v1 ZMD artifacts validate against v2 schema"
+    severity: required
+    tests:
+      - script: scripts/audit/validate-migration-v1-v2.sh tests/golden/
+      - cargo: "cargo test conformance_v2"
+        file: tests/conformance.rs
+    coverage: missing
+
+  - id: INV-202-2
+    description: "format const 'stf-sir.zmd' enforced by schema"
+    severity: required
+    tests:
+      - cargo: "cargo test schema_format_const"
+        file: tests/conformance.rs
+    coverage: missing
+
+  - id: INV-202-3
+    description: "Output SHA-256 is stable across recompilations"
+    severity: required
+    tests:
+      - script: "scripts/audit/check-determinism.sh 1000 tests/golden/sample.md"
+      - cargo: "cargo test metamorphic"
+        file: tests/metamorphic.rs
+    coverage: partial  # determinism script not yet extended to 1000 runs in CI
+
+  - id: INV-202-4
+    description: "All v2 changes are additive (no v1 field removed or renamed)"
+    severity: required
+    tests:
+      - script: scripts/audit/validate-migration-v1-v2.sh tests/golden/
+    coverage: missing
+
+  - id: INV-202-5
+    description: "version field is integer enum [1, 2]"
+    severity: required
+    tests:
+      - cargo: "cargo test schema_version_enum"
+        file: tests/conformance.rs
+    coverage: missing
+
+  # ─── EPIC-203: Semantic Query Engine ───────────────────────────────
+  - id: INV-203-1
+    description: "Query determinism: identical graph + query → identical result"
+    severity: required
+    tests:
+      - cargo: "cargo test query_metamorphic"
+        file: tests/query/metamorphic.rs
+    coverage: missing
+
+  - id: INV-203-2
+    description: "Query completeness: no matching node is silently dropped"
+    severity: required
+    tests:
+      - cargo: "cargo test query_completeness"
+        file: tests/query/completeness.rs
+    coverage: missing
+
+  - id: INV-203-3
+    description: "Queries are read-only: no artifact modification"
+    severity: required
+    tests:
+      - cargo: "cargo test query_readonly"
+        file: tests/query/executor_tests.rs
+    coverage: missing
+
+  - id: INV-203-4
+    description: "Result serialization is deterministic"
+    severity: required
+    tests:
+      - cargo: "cargo test query_result_determinism"
+        file: tests/query/executor_tests.rs
+    coverage: missing
+
+  - id: INV-203-5
+    description: "Engine returns Err (not panic) on malformed query"
+    severity: required
+    tests:
+      - cargo: "cargo test query_parse_error_no_panic"
+        file: tests/query/parser_tests.rs
+    coverage: missing
+
+  # ─── EPIC-204: Semantic Diff Engine ───────────────────────────────
+  - id: INV-204-1
+    description: "Diff determinism"
+    severity: required
+    tests:
+      - cargo: "cargo test diff_metamorphic"
+        file: tests/diff/metamorphic.rs
+    coverage: missing
+
+  - id: INV-204-2
+    description: "diff(A, A) = EmptyDiff"
+    severity: required
+    tests:
+      - cargo: "cargo test diff_identity"
+        file: tests/diff/structural_tests.rs
+    coverage: missing
+
+  - id: INV-204-3
+    description: "|added(A,B)| = |removed(B,A)|"
+    severity: required
+    tests:
+      - cargo: "cargo test diff_symmetry"
+        file: tests/diff/structural_tests.rs
+    coverage: missing
+
+  - id: INV-204-4
+    description: "Diff is non-destructive"
+    severity: required
+    tests:
+      - cargo: "cargo test diff_nondestructive"
+        file: tests/diff/structural_tests.rs
+    coverage: missing
+
+  - id: INV-204-5
+    description: "All changed tokens appear in diff report (completeness)"
+    severity: required
+    tests:
+      - cargo: "cargo bench diff_accuracy --features structural"
+    coverage: missing
+
+  # ─── EPIC-205: Retention & Benchmark ──────────────────────────────
+  - id: INV-205-1
+    description: "Benchmark reproducibility"
+    severity: required
+    tests:
+      - script: "scripts/audit/check-benchmark-reproducibility.sh 10"
+    coverage: missing
+
+  - id: INV-205-2
+    description: "v2 baseline ≥ v1 baseline on shared corpus"
+    severity: required
+    tests:
+      - script: "scripts/audit/compare-retention-baseline.sh"
+    coverage: missing
+
+  - id: INV-205-3
+    description: "No silent corpus failures"
+    severity: required
+    tests:
+      - cargo: "cargo test benchmark_no_silent_failures"
+        file: tests/retention_v2.rs
+    coverage: missing
+
+  - id: INV-205-4
+    description: "All ρ values in [0.0, 1.0]"
+    severity: required
+    tests:
+      - cargo: "PROPTEST_CASES=512 cargo test proptest_invariants -- rho_bounds"
+        file: tests/proptest_invariants.rs
+    coverage: partial  # v1 bounds tested; v2 extensions not yet
+
+  - id: INV-205-5
+    description: "Drift detection uses semantic diff, not text diff"
+    severity: required
+    tests:
+      - cargo: "cargo test drift_uses_semantic_diff"
+        file: tests/benchmark/drift_benchmark.rs
+    coverage: missing
+
+  # ─── EPIC-206: RAG & Agent Integration ────────────────────────────
+  - id: INV-206-1
+    description: "Every chunk has full provenance"
+    severity: required
+    tests:
+      - cargo: "cargo test --features rag rag_provenance_completeness"
+        file: tests/rag/embedding_tests.rs
+    coverage: missing
+
+  - id: INV-206-2
+    description: "RAG code absent without --features rag"
+    severity: required
+    tests:
+      - script: "scripts/audit/check-feature-gate.sh rag src/rag/"
+    coverage: missing
+
+  - id: INV-206-3
+    description: "Agent tools are read-only"
+    severity: required
+    tests:
+      - cargo: "cargo test agent_tools_readonly"
+        file: tests/agent/tool_tests.rs
+    coverage: missing
+
+  - id: INV-206-4
+    description: "Chunk serialization is deterministic"
+    severity: required
+    tests:
+      - cargo: "cargo test --features rag chunk_determinism"
+        file: tests/rag/embedding_tests.rs
+    coverage: missing
+
+  # ─── EPIC-207: Compiler Refactor ──────────────────────────────────
+  - id: INV-207-1
+    description: "v1 golden gate: zero byte regressions"
+    severity: required
+    tests:
+      - cargo: "cargo test golden"
+        file: tests/golden.rs
+    coverage: full  # already implemented in v1
+
+  - id: INV-207-2
+    description: "Enricher monotonicity"
+    severity: required
+    tests:
+      - cargo: "PROPTEST_CASES=512 cargo test enricher_monotonicity"
+        file: tests/enricher_monotonicity.rs
+    coverage: missing
+
+  - id: INV-207-3
+    description: "Pipeline order is fixed and deterministic"
+    severity: required
+    tests:
+      - cargo: "cargo test pipeline_order"
+        file: tests/compile_v2.rs
+    coverage: missing
+
+  - id: INV-207-4
+    description: "No-enricher output identical to v1 compiler"
+    severity: required
+    tests:
+      - cargo: "cargo test golden"
+        file: tests/golden.rs
+    coverage: partial  # v1 golden covers this partially; needs explicit test
+
+  - id: INV-207-5
+    description: "Compiler never panics"
+    severity: required
+    tests:
+      - cargo: "PROPTEST_CASES=512 cargo test proptest_invariants -- no_panic"
+        file: tests/proptest_invariants.rs
+    coverage: partial  # v1 tests; needs extension for v2 inputs
+
+  # ─── EPIC-208: Extensibility Model ────────────────────────────────
+  - id: INV-208-1
+    description: "Plugin writes only to declared namespace"
+    severity: required
+    tests:
+      - cargo: "cargo test plugin_isolation"
+        file: tests/plugin_tests.rs
+    coverage: missing
+
+  - id: INV-208-2
+    description: "Plugins inherit enricher monotonicity"
+    severity: required
+    tests:
+      - cargo: "PROPTEST_CASES=256 cargo test plugin_monotonicity"
+        file: tests/plugin_tests.rs
+    coverage: missing
+
+  - id: INV-208-3
+    description: "stf-sir namespace is reserved"
+    severity: required
+    tests:
+      - cargo: "cargo test plugin_reserved_namespace"
+        file: tests/plugin_tests.rs
+    coverage: missing
+
+  - id: INV-208-4
+    description: "External protocol uses JSON only (no shell execution)"
+    severity: required
+    tests:
+      - cargo: "cargo test plugin_external_no_shell"
+        file: tests/plugin_tests.rs
+    coverage: missing
+
+  - id: INV-208-5
+    description: "Plugin registration is deterministic"
+    severity: required
+    tests:
+      - cargo: "cargo test plugin_registration_deterministic"
+        file: tests/plugin_tests.rs
+    coverage: missing
+
+# ─── Summary ────────────────────────────────────────────────────────────
+# Total invariants: 38
+# Coverage full:    1  (INV-207-1)
+# Coverage partial: 3  (INV-202-3, INV-205-4, INV-207-5)
+# Coverage missing: 34 (all v2 features not yet implemented)
+#
+# Target for alpha: all required invariants have at least partial coverage
+# Target for RC:    all required invariants have full coverage

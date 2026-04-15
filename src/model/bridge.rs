@@ -6,16 +6,21 @@
 //!
 //! ## Provenance mapping (ZToken → Statement)
 //!
-//! | ZToken field              | Statement / Provenance field |
-//! |---------------------------|------------------------------|
-//! | `token.id`                | `Statement.id`               |
-//! | `token.lexical.normalized_text` | `Statement.text`       |
-//! | `token.syntactic.node_type` | `Statement.domain`         |
-//! | `artifact.source.sha256`  | `Provenance.source_ids`      |
-//! | `token.id` (ztoken anchor)| `Provenance.anchors`         |
+//! | ZToken field              | Statement / Provenance field         |
+//! |---------------------------|--------------------------------------|
+//! | `token.id`                | `Statement.id`                       |
+//! | `token.lexical.normalized_text` | `Statement.text`             |
+//! | `token.syntactic.node_type` | `Statement.domain`               |
+//! | `artifact.source.sha256`  | `Provenance.source_ids`              |
+//! | `token.id` (ztoken anchor)| `Provenance.anchors`                 |
 //! | `token.lexical.span` → `"<start_byte>:<end_byte>"` | `Provenance.anchors` |
 //! | `token.logical.relation_ids` | `Statement.metadata["relation_ids"]` |
-//! | `token.syntactic.path`    | `Statement.metadata["path"]`  |
+//! | `token.syntactic.path`    | `Statement.metadata["path"]`         |
+//! | `token.id`                | `Statement.metadata["zid"]`          |
+//! | `token.syntactic.node_type` | `Statement.metadata["node_type"]`  |
+//! | `token.lexical.span.start_byte` | `Statement.metadata["span_start"]` |
+//! | `token.lexical.span.end_byte`   | `Statement.metadata["span_end"]`   |
+//! | `Formula::parse(text)`    | `Statement.formula`                  |
 //!
 //! A ZToken is considered grounded (`Provenance.grounded = true`) if its
 //! `lexical.source_text` is non-empty, establishing that the token has a
@@ -71,6 +76,14 @@ pub fn artifact_to_theory(artifact: &Artifact) -> Theory {
             metadata.insert("parent_id".to_string(), parent_id.clone());
         }
         metadata.insert("depth".to_string(), token.syntactic.depth.to_string());
+        // Structural enrichment: ztoken id, node type, and byte-span for direct lookup.
+        metadata.insert("zid".to_string(), token.id.clone());
+        metadata.insert("node_type".to_string(), token.syntactic.node_type.clone());
+        metadata.insert("span_start".to_string(), token.lexical.span.start_byte.to_string());
+        metadata.insert("span_end".to_string(), token.lexical.span.end_byte.to_string());
+
+        // -- Formula (pre-parsed; engines use this directly, no re-parsing needed) --
+        let formula = Formula::parse(&text);
 
         // -- Kind --
         let kind = StatementKind::Atomic;
@@ -82,23 +95,26 @@ pub fn artifact_to_theory(artifact: &Artifact) -> Theory {
             domain: token.syntactic.node_type.clone(),
             provenance,
             metadata,
+            formula,
+            semantic_dimensions: None,
         });
     }
 
     theory
 }
 
-/// Convert an `Artifact` to a `Theory` and also parse `Formula`s for each statement.
+/// Convert an `Artifact` to a `Theory` and return each `Statement` paired with
+/// its embedded `Formula`.
 ///
-/// This is the richer variant: each `Statement` gets a `formula` derived by
-/// parsing its normalized text.  Used by the `FormulaCoherenceChecker` and
-/// the `FormulaInferenceEngine`.
+/// Since `artifact_to_theory` now embeds a `Formula` in every `Statement`, this
+/// function simply surfaces the already-parsed formula as the second element of
+/// each tuple.  Callers can also access `stmt.formula` directly.
 pub fn artifact_to_theory_with_formulas(artifact: &Artifact) -> Vec<(Statement, Option<Formula>)> {
     artifact_to_theory(artifact)
         .statements
         .into_values()
         .map(|stmt| {
-            let formula = Formula::parse(&stmt.text);
+            let formula = stmt.formula.clone();
             (stmt, formula)
         })
         .collect()
